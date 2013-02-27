@@ -1,0 +1,261 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/yowsup/0/signals">
+  <interface name="com.yowsup.signals">
+    <signal name="video_received">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_endSuccess">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="auth_fail">
+      <arg type="s" name="username" />
+      <arg type="s" name="reason" />
+    </signal>
+    <signal name="group_setPictureSuccess">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="presence_unavailable">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="audio_received">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="location_received">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="name" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="latitude" />
+      <arg type="v" name="longitude" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="notification_groupParticipantAdded">
+      <arg type="v" name="gJid" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="messageId" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_locationReceived">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="name" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="latitude" />
+      <arg type="v" name="longitude" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_removeParticipantsSuccess">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="group_infoError">
+      <arg type="v" name="errorCode" />
+    </signal>
+    <signal name="notification_groupParticipantRemoved">
+      <arg type="v" name="gjid" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="messageId" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="pong">
+    </signal>
+    <signal name="group_audioReceived">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="receipt_visible">
+      <arg type="v" name="jid" />
+      <arg type="v" name="msgId" />
+    </signal>
+    <signal name="receipt_messageSent">
+      <arg type="v" name="jid" />
+      <arg type="v" name="msgId" />
+    </signal>
+    <method name="getSignals">
+    </method>
+    <signal name="group_gotPicture">
+      <arg type="v" name="jid" />
+      <arg type="v" name="filepath" />
+    </signal>
+    <signal name="ping">
+      <arg type="v" name="pingId" />
+    </signal>
+    <signal name="notification_groupPictureUpdated">
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="messageId" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="message_received">
+      <arg type="v" name="msgId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="content" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_createSuccess">
+      <arg type="v" name="jid" />
+      <arg type="v" name="group_id" />
+    </signal>
+    <signal name="status_dirty">
+    </signal>
+    <signal name="message_error">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="errorCode" />
+    </signal>
+    <signal name="group_addParticipantsSuccess">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="profile_setPictureError">
+      <arg type="v" name="errorCode" />
+    </signal>
+    <signal name="group_vcardReceived">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="name" />
+      <arg type="v" name="data" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_messageReceived">
+      <arg type="v" name="msgId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="content" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="notification_contactProfilePictureUpdated">
+      <arg type="v" name="jid" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="messageId" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="group_imageReceived">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="contact_gotProfilePictureId">
+      <arg type="v" name="jid" />
+      <arg type="v" name="pictureId" />
+    </signal>
+    <signal name="group_createFail">
+      <arg type="v" name="errorCode" />
+    </signal>
+    <signal name="presence_available">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="group_setPictureError">
+      <arg type="v" name="jid" />
+      <arg type="v" name="errorCode" />
+    </signal>
+    <signal name="group_subjectReceived">
+      <arg type="v" name="msgId" />
+      <arg type="v" name="fromAttribute" />
+      <arg type="v" name="author" />
+      <arg type="v" name="newSubject" />
+      <arg type="v" name="timestamp" />
+      <arg type="v" name="receiptRequested" />
+    </signal>
+    <signal name="contact_gotProfilePicture">
+      <arg type="v" name="jid" />
+      <arg type="v" name="filename" />
+    </signal>
+    <signal name="group_gotInfo">
+      <arg type="v" name="jid" />
+      <arg type="v" name="owner" />
+      <arg type="v" name="subject" />
+      <arg type="v" name="subjectOwner" />
+      <arg type="v" name="subjectT" />
+      <arg type="v" name="creation" />
+    </signal>
+    <signal name="profile_setPictureSuccess">
+    </signal>
+    <signal name="auth_success">
+      <arg type="s" name="username" />
+    </signal>
+    <signal name="receipt_messageDelivered">
+      <arg type="v" name="jid" />
+      <arg type="v" name="msgId" />
+    </signal>
+    <signal name="group_setSubjectSuccess">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="group_videoReceived">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="author" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="disconnected">
+      <arg type="v" name="reason" />
+    </signal>
+    <signal name="profile_setStatusSuccess">
+      <arg type="v" name="jid" />
+      <arg type="v" name="messageId" />
+    </signal>
+    <signal name="vcard_received">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="name" />
+      <arg type="v" name="data" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="presence_updated">
+      <arg type="v" name="jid" />
+      <arg type="v" name="lastSeen" />
+    </signal>
+    <signal name="group_gotParticipants">
+      <arg type="v" name="jid" />
+      <arg type="v" name="jids" />
+    </signal>
+    <signal name="contact_typing">
+      <arg type="v" name="jid" />
+    </signal>
+    <signal name="image_received">
+      <arg type="v" name="messageId" />
+      <arg type="v" name="jid" />
+      <arg type="v" name="preview" />
+      <arg type="v" name="url" />
+      <arg type="v" name="size" />
+      <arg type="v" name="wantsReceipt" />
+    </signal>
+    <signal name="contact_paused">
+      <arg type="v" name="jid" />
+    </signal>
+  </interface>
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg direction="out" type="s" />
+    </method>
+  </interface>
+</node>
+

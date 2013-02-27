@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Terminal=false
+Exec=/usr/bin/qmlscene
+Name=whosthere
+GenericName=whosthere
+Comment=My project description
+Icon=ubuntu-qmlrunner
