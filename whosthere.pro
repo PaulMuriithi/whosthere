@@ -1,5 +1,8 @@
 QT += qml dbus quick
 
+DEFINES += QMLJSDEBUGGER
+QMAKE_CXXFLAGS += -Wall -std=c++0x
+
 SOURCES += main.cpp \
            yowsup.cpp \
 		   yowsup_main.cpp \
@@ -12,3 +15,12 @@ HEADERS += yowsup.h \
 		   yowsup_methods.h
 
 RESOURCES += whosthere.qrc
+
+OTHER_FILES += \
+    whosthere.qml
+
+OTHER_FILES += \
+    Conversation.qml
+
+OTHER_FILES += \
+    whosthere.js

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_METHODS_H_1361953676
-#define YOWSUP_METHODS_H_1361953676
+#ifndef YOWSUP_METHODS_H_1362030303
+#define YOWSUP_METHODS_H_1362030303
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -43,29 +43,275 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QLatin1String("auth_login"), argumentList);
     }
 
+    inline QDBusPendingReply<> clientconfig_send()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("clientconfig_send"), argumentList);
+    }
+
+    inline QDBusPendingReply<> contact_getProfilePicture(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("contact_getProfilePicture"), argumentList);
+    }
+
+    inline QDBusPendingReply<> delivered_ack(const QString &jid, const QString &msgId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(msgId);
+        return asyncCallWithArgumentList(QLatin1String("delivered_ack"), argumentList);
+    }
+
+    inline QDBusPendingReply<> disconnect(const QByteArray &reason)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(reason);
+        return asyncCallWithArgumentList(QLatin1String("disconnect"), argumentList);
+    }
+
     inline QDBusPendingReply<> getMethods()
     {
         QList<QVariant> argumentList;
         return asyncCallWithArgumentList(QLatin1String("getMethods"), argumentList);
     }
 
-    inline QDBusPendingReply<> getVersion()
+    inline QDBusPendingReply<QString> getVersion()
     {
         QList<QVariant> argumentList;
         return asyncCallWithArgumentList(QLatin1String("getVersion"), argumentList);
     }
 
-    inline QDBusPendingReply<> message_send(const QDBusVariant &jid, const QDBusVariant &message)
+    inline QDBusPendingReply<> group_addParticipants(const QDBusVariant &jid, const QDBusVariant &participants)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(participants);
+        return asyncCallWithArgumentList(QLatin1String("group_addParticipants"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_create(const QDBusVariant &subject)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(subject);
+        return asyncCallWithArgumentList(QLatin1String("group_create"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_end(const QDBusVariant &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("group_end"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_getInfo(const QDBusVariant &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("group_getInfo"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_getParticipants(const QDBusVariant &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("group_getParticipants"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_getPicture(const QDBusVariant &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("group_getPicture"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_removeParticipants(const QDBusVariant &jid, const QDBusVariant &participants)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(participants);
+        return asyncCallWithArgumentList(QLatin1String("group_removeParticipants"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_setPicture(const QDBusVariant &jid, const QDBusVariant &filepath)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(filepath);
+        return asyncCallWithArgumentList(QLatin1String("group_setPicture"), argumentList);
+    }
+
+    inline QDBusPendingReply<> group_setSubject(const QDBusVariant &jid, const QDBusVariant &subject)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(subject);
+        return asyncCallWithArgumentList(QLatin1String("group_setSubject"), argumentList);
+    }
+
+    inline QDBusPendingReply<> message_ack(const QString &jid, const QString &msgId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(msgId);
+        return asyncCallWithArgumentList(QLatin1String("message_ack"), argumentList);
+    }
+
+    inline QDBusPendingReply<> message_audioSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(url) << QVariant::fromValue(name) << QVariant::fromValue(size);
+        return asyncCallWithArgumentList(QLatin1String("message_audioSend"), argumentList);
+    }
+
+    inline QDBusPendingReply<QString> message_imageSend(const QString &jid, const QString &url, const QString &name, int size, const QString &preview)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(url) << QVariant::fromValue(name) << QVariant::fromValue(size) << QVariant::fromValue(preview);
+        return asyncCallWithArgumentList(QLatin1String("message_imageSend"), argumentList);
+    }
+
+    inline QDBusPendingReply<> message_locationSend(const QDBusVariant &jid, const QDBusVariant &latitude, const QDBusVariant &longitude, const QDBusVariant &preview)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(latitude) << QVariant::fromValue(longitude) << QVariant::fromValue(preview);
+        return asyncCallWithArgumentList(QLatin1String("message_locationSend"), argumentList);
+    }
+
+    inline QDBusPendingReply<QString> message_send(const QString &jid, const QByteArray &message)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(jid) << QVariant::fromValue(message);
         return asyncCallWithArgumentList(QLatin1String("message_send"), argumentList);
     }
 
-    inline QDBusPendingReply<> wrapped()
+    inline QDBusPendingReply<> message_vcardSend(const QDBusVariant &jid, const QDBusVariant &data, const QDBusVariant &name)
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("wrapped"), argumentList);
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(data) << QVariant::fromValue(name);
+        return asyncCallWithArgumentList(QLatin1String("message_vcardSend"), argumentList);
+    }
+
+    inline QDBusPendingReply<> message_videoSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size, const QDBusVariant &preview)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(url) << QVariant::fromValue(name) << QVariant::fromValue(size) << QVariant::fromValue(preview);
+        return asyncCallWithArgumentList(QLatin1String("message_videoSend"), argumentList);
+    }
+
+    inline QDBusPendingReply<> notification_ack(const QString &jid, const QString &msgId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(msgId);
+        return asyncCallWithArgumentList(QLatin1String("notification_ack"), argumentList);
+    }
+
+    inline QDBusPendingReply<> picture_getIds(const QString &jids)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jids);
+        return asyncCallWithArgumentList(QLatin1String("picture_getIds"), argumentList);
+    }
+
+    inline QDBusPendingReply<> ping()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("ping"), argumentList);
+    }
+
+    inline QDBusPendingReply<> pong(const QString &pingId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(pingId);
+        return asyncCallWithArgumentList(QLatin1String("pong"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_request(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("presence_request"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_sendAvailable()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("presence_sendAvailable"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_sendAvailableForChat()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("presence_sendAvailableForChat"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_sendUnavailable()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("presence_sendUnavailable"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_subscribe(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("presence_subscribe"), argumentList);
+    }
+
+    inline QDBusPendingReply<> presence_unsubscribe(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("presence_unsubscribe"), argumentList);
+    }
+
+    inline QDBusPendingReply<> profile_getPicture()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("profile_getPicture"), argumentList);
+    }
+
+    inline QDBusPendingReply<> profile_setPicture(const QString &filepath)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(filepath);
+        return asyncCallWithArgumentList(QLatin1String("profile_setPicture"), argumentList);
+    }
+
+    inline QDBusPendingReply<> profile_setStatus(const QString &status)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(status);
+        return asyncCallWithArgumentList(QLatin1String("profile_setStatus"), argumentList);
+    }
+
+    inline QDBusPendingReply<> ready()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("ready"), argumentList);
+    }
+
+    inline QDBusPendingReply<> subject_ack(const QString &jid, const QString &msgId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(msgId);
+        return asyncCallWithArgumentList(QLatin1String("subject_ack"), argumentList);
+    }
+
+    inline QDBusPendingReply<> typing_paused(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("typing_paused"), argumentList);
+    }
+
+    inline QDBusPendingReply<> typing_send(const QString &jid)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid);
+        return asyncCallWithArgumentList(QLatin1String("typing_send"), argumentList);
+    }
+
+    inline QDBusPendingReply<> visible_ack(const QString &jid, const QString &msgId)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(jid) << QVariant::fromValue(msgId);
+        return asyncCallWithArgumentList(QLatin1String("visible_ack"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

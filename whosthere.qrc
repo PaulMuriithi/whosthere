@@ -1,5 +1,6 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-    <file>whosthere.qml</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>whosthere.qml</file>
+        <file>whosthere.js</file>
+    </qresource>
 </RCC>

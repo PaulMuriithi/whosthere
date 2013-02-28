@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_SIGNALS_H_1361953676
-#define YOWSUP_SIGNALS_H_1361953676
+#ifndef YOWSUP_SIGNALS_H_1362030303
+#define YOWSUP_SIGNALS_H_1362030303
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -43,55 +43,55 @@ public Q_SLOTS: // METHODS
     }
 
 Q_SIGNALS: // SIGNALS
-    void audio_received(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
+    void audio_received(const QString &messageId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);
-    void contact_gotProfilePicture(const QDBusVariant &jid, const QDBusVariant &filename);
-    void contact_gotProfilePictureId(const QDBusVariant &jid, const QDBusVariant &pictureId);
-    void contact_paused(const QDBusVariant &jid);
-    void contact_typing(const QDBusVariant &jid);
-    void disconnected(const QDBusVariant &reason);
-    void group_addParticipantsSuccess(const QDBusVariant &jid);
-    void group_audioReceived(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
-    void group_createFail(const QDBusVariant &errorCode);
-    void group_createSuccess(const QDBusVariant &jid, const QDBusVariant &group_id);
-    void group_endSuccess(const QDBusVariant &jid);
-    void group_gotInfo(const QDBusVariant &jid, const QDBusVariant &owner, const QDBusVariant &subject, const QDBusVariant &subjectOwner, const QDBusVariant &subjectT, const QDBusVariant &creation);
-    void group_gotParticipants(const QDBusVariant &jid, const QDBusVariant &jids);
-    void group_gotPicture(const QDBusVariant &jid, const QDBusVariant &filepath);
-    void group_imageReceived(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &preview, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
-    void group_infoError(const QDBusVariant &errorCode);
-    void group_locationReceived(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &name, const QDBusVariant &preview, const QDBusVariant &latitude, const QDBusVariant &longitude, const QDBusVariant &wantsReceipt);
-    void group_messageReceived(const QDBusVariant &msgId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &content, const QDBusVariant &timestamp, const QDBusVariant &wantsReceipt);
-    void group_removeParticipantsSuccess(const QDBusVariant &jid);
-    void group_setPictureError(const QDBusVariant &jid, const QDBusVariant &errorCode);
-    void group_setPictureSuccess(const QDBusVariant &jid);
-    void group_setSubjectSuccess(const QDBusVariant &jid);
-    void group_subjectReceived(const QDBusVariant &msgId, const QDBusVariant &fromAttribute, const QDBusVariant &author, const QDBusVariant &newSubject, const QDBusVariant &timestamp, const QDBusVariant &receiptRequested);
-    void group_vcardReceived(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &name, const QDBusVariant &data, const QDBusVariant &wantsReceipt);
-    void group_videoReceived(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &preview, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
-    void image_received(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &preview, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
-    void location_received(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &name, const QDBusVariant &preview, const QDBusVariant &latitude, const QDBusVariant &longitude, const QDBusVariant &wantsReceipt);
-    void message_error(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &errorCode);
-    void message_received(const QDBusVariant &msgId, const QDBusVariant &jid, const QDBusVariant &content, const QDBusVariant &timestamp, const QDBusVariant &wantsReceipt);
-    void notification_contactProfilePictureUpdated(const QDBusVariant &jid, const QDBusVariant &timestamp, const QDBusVariant &messageId, const QDBusVariant &wantsReceipt);
-    void notification_groupParticipantAdded(const QDBusVariant &gJid, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &timestamp, const QDBusVariant &messageId, const QDBusVariant &wantsReceipt);
-    void notification_groupParticipantRemoved(const QDBusVariant &gjid, const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &timestamp, const QDBusVariant &messageId, const QDBusVariant &wantsReceipt);
-    void notification_groupPictureUpdated(const QDBusVariant &jid, const QDBusVariant &author, const QDBusVariant &timestamp, const QDBusVariant &messageId, const QDBusVariant &wantsReceipt);
-    void ping(const QDBusVariant &pingId);
+    void contact_gotProfilePicture(const QString &jid, const QString &filename);
+    void contact_gotProfilePictureId(const QString &jid, const QString &pictureId);
+    void contact_paused(const QString &jid);
+    void contact_typing(const QString &jid);
+    void disconnected(const QString &reason);
+    void group_addParticipantsSuccess(const QString &jid);
+    void group_audioReceived(const QString &messageId, const QString &jid, const QString &author, const QString &url, int size, bool wantsReceipt);
+    void group_createFail(const QString &errorCode);
+    void group_createSuccess(const QString &jid, const QString &group_id);
+    void group_endSuccess(const QString &jid);
+    void group_gotInfo(const QString &jid, const QString &owner, const QString &subject, const QString &subjectOwner, const QString &subjectT, const QString &creation);
+    void group_gotParticipants(const QString &jid, const QString &jids);
+    void group_gotPicture(const QString &jid, const QString &filepath);
+    void group_imageReceived(const QString &messageId, const QString &jid, const QString &author, const QString &preview, const QString &url, int size, bool wantsReceipt);
+    void group_infoError(const QString &errorCode);
+    void group_locationReceived(const QString &messageId, const QString &jid, const QString &author, const QString &name, const QString &preview, double latitude, double longitude, bool wantsReceipt);
+    void group_messageReceived(const QString &msgId, const QString &jid, const QString &author, const QString &content, const QString &timestamp, bool wantsReceipt);
+    void group_removeParticipantsSuccess(const QString &jid);
+    void group_setPictureError(const QString &jid, const QString &errorCode);
+    void group_setPictureSuccess(const QString &jid);
+    void group_setSubjectSuccess(const QString &jid);
+    void group_subjectReceived(const QString &msgId, const QString &fromAttribute, const QString &author, const QString &newSubject, const QString &timestamp, const QString &receiptRequested);
+    void group_vcardReceived(const QString &messageId, const QString &jid, const QString &author, const QString &name, const QString &data, bool wantsReceipt);
+    void group_videoReceived(const QString &messageId, const QString &jid, const QString &author, const QString &preview, const QString &url, int size, bool wantsReceipt);
+    void image_received(const QString &messageId, const QString &jid, const QString &preview, const QString &url, const QString &size, bool wantsReceipt);
+    void location_received(const QString &messageId, const QString &jid, const QString &name, const QString &preview, double latitude, double longitude, bool wantsReceipt);
+    void message_error(const QString &messageId, const QString &jid, const QString &errorCode);
+    void message_received(const QString &msgId, const QString &jid, const QString &content, int timestamp, bool wantsReceipt, const QString &pushName);
+    void notification_contactProfilePictureUpdated(const QString &jid, const QString &timestamp, const QString &messageId, bool wantsReceipt);
+    void notification_groupParticipantAdded(const QString &gJid, const QString &jid, const QString &author, const QString &timestamp, const QString &messageId, bool wantsReceipt);
+    void notification_groupParticipantRemoved(const QString &gjid, const QString &jid, const QString &author, const QString &timestamp, const QString &messageId, bool wantsReceipt);
+    void notification_groupPictureUpdated(const QString &jid, const QString &author, const QString &timestamp, const QString &messageId, bool wantsReceipt);
+    void ping(const QString &pingId);
     void pong();
-    void presence_available(const QDBusVariant &jid);
-    void presence_unavailable(const QDBusVariant &jid);
-    void presence_updated(const QDBusVariant &jid, const QDBusVariant &lastSeen);
-    void profile_setPictureError(const QDBusVariant &errorCode);
+    void presence_available(const QString &jid);
+    void presence_unavailable(const QString &jid);
+    void presence_updated(const QString &jid, const QString &lastSeen);
+    void profile_setPictureError(const QString &errorCode);
     void profile_setPictureSuccess();
-    void profile_setStatusSuccess(const QDBusVariant &jid, const QDBusVariant &messageId);
-    void receipt_messageDelivered(const QDBusVariant &jid, const QDBusVariant &msgId);
-    void receipt_messageSent(const QDBusVariant &jid, const QDBusVariant &msgId);
-    void receipt_visible(const QDBusVariant &jid, const QDBusVariant &msgId);
+    void profile_setStatusSuccess(const QString &jid, const QString &messageId);
+    void receipt_messageDelivered(const QString &jid, const QString &msgId);
+    void receipt_messageSent(const QString &jid, const QString &msgId);
+    void receipt_visible(const QString &jid, const QString &msgId);
     void status_dirty();
-    void vcard_received(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &name, const QDBusVariant &data, const QDBusVariant &wantsReceipt);
-    void video_received(const QDBusVariant &messageId, const QDBusVariant &jid, const QDBusVariant &preview, const QDBusVariant &url, const QDBusVariant &size, const QDBusVariant &wantsReceipt);
+    void vcard_received(const QString &messageId, const QString &jid, const QString &name, const QString &data, bool wantsReceipt);
+    void video_received(const QString &messageId, const QString &jid, const QString &preview, const QString &url, int size, bool wantsReceipt);
 };
 
 #endif
