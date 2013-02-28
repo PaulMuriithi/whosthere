@@ -24,3 +24,6 @@ OTHER_FILES += \
 
 OTHER_FILES += \
     whosthere.js
+
+target.path = $${PREFIX}/bin
+INSTALLS += target
