@@ -9,7 +9,7 @@ MainView {
     id: root
     width: units.gu(100)
     height: units.gu(75)
-    anchors.centerIn: parent
+    //anchors.centerIn: parent
     //anchors.fill: parent
     //color: "lightgray"
 
