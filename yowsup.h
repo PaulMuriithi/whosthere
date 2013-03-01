@@ -13,6 +13,7 @@ public:
     yowsup_signals* ys;
     yowsup_methods* ym;
 
+    bool connectDbus();
 public slots:
 
     /* Misc */
@@ -21,6 +22,8 @@ public slots:
     void pong(const QString &pingId);
     void disconnect(const QByteArray& reason);
 
+    void code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity);
+    void code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText);
     //void ping();
 
     /*void typing_send(const QDBusVariant &jid);
@@ -119,6 +122,8 @@ signals:
     void status_dirty();
     void vcard_received(const QString &messageId, const QString &jid, const QString &name, const QString &data, bool wantsReceipt);
     void video_received(const QString &messageId, const QString &jid, const QString &preview, const QString &url, int size, bool wantsReceipt);
+    void code_register_response(const QString &status, const QString &reason, const QString &pw);
+    void code_request_response(const QString &status, const QString &reason);
 };
 
 #endif // YOWSUP_H

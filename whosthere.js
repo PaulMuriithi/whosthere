@@ -33,14 +33,30 @@ function updateMessages() {
 
 }
 
+function openDB() {
+    var db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000,
+              function(tx) {
+                  tx.executeSql('CREATE TABLE IF NOT EXISTS Credentials(username TEXT, password TEXT, uid TEXT)');
+                  tx.executeSql('CREATE TABLE IF NOT EXISTS Messages(type TEXT, content TEXT, jid TEXT, msgId TEXT, timestamp INT, incoming BOOL, sent BOOL, delivered BOOL)');
+               });
+
+    if(db.version == "1.0") {
+        console.log("Updating db to 1.1");
+        db.changeVersion("1.0","1.1", function(tx) {
+            tx.executeSql('ALTER TABLE Credentials ADD uid TEXT');
+            });
+    }
+    return db;
+}
+
 function loadMessages() {
     console.log("loadMessages");
-    var db = LocalStorage.openDatabaseSync("WhosThere", "1.0", "WhosThere Database", 1000000);
+    var db = openDB();
     //db.changeVersion(from, to, callback(tx))
 
     db.transaction(
                 function(tx) {
-                    //try {
+                    try {
                         var rs = tx.executeSql('SELECT * FROM Messages');
                         for(var i=0;i < rs.rows.length; ++i) {
                             console.log("loaded message " + rs.rows.item(i).jid);
@@ -55,10 +71,10 @@ function loadMessages() {
 
                                                 });
                         }
-                    /*}
+                    }
                     catch(err) {
                         console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                    }*/
+                    }
                 });
     updateMessages();
 }
@@ -66,21 +82,30 @@ function loadMessages() {
 function addMessage(msg) {
     allMessages.append(msg);
 
-    var db = LocalStorage.openDatabaseSync("WhosThere", "1.0", "WhosThere Database", 1000000);
+    var db = openDB();
 
     db.transaction(
                 function(tx) {
-                    // Create the database if it doesn't already exist
-                    tx.executeSql('CREATE TABLE IF NOT EXISTS Messages(type TEXT, content TEXT, jid TEXT, msgId TEXT, timestamp INT, incoming BOOL, sent BOOL, delivered BOOL)');
                     tx.executeSql('INSERT INTO Messages VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
                                   [ msg['type'], msg['content'], msg['jid'], msg['msgId'], msg['timestamp'],
                                   msg['incoming'], msg['sent'], msg['delivered']]);
                 })
 }
 
+function createUID() {
+    var s = [];
+    var hexDigits = "0123456789abcdef";
+    for (var i = 0; i < 32; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s = s.join('');
+    console.log('Created uid ' + s);
+    return s;
+}
+
 function fillCredentials() {
     console.log("fillCredentials");
-    var db = LocalStorage.openDatabaseSync("WhosThere", "1.0", "WhosThere Database", 1000000);
+    var db = openDB()
 
     db.transaction(
                 function(tx) {
@@ -93,26 +118,27 @@ function fillCredentials() {
                         if(rs.rows.length > 0) {
                             username_txt.text = rs.rows.item(0).username;
                             password_txt.text = rs.rows.item(0).password;
+                            if(rs.rows.item(0).uid)
+                                uid_txt.text = rs.rows.item(0).uid;
+                            else
+                                uid_txt.text = createUID();
                         }
                     } catch(err) {
-
+                        console.log("Could not open database. Maybe this is the first run? Error: " + err);
+                        uid_txt.text = createUID();
                     }
-
                 }
                 )
 }
 
-function saveCredentials(username, password) {
+function saveCredentials(username, password, uid) {
     console.log("saveCredentials");
-    var db = LocalStorage.openDatabaseSync("WhosThere", "1.0", "WhosThere Database", 1000000);
+    var db = openDB();
 
     db.transaction(
                 function(tx) {
-                    // Create the database if it doesn't already exist
-                    tx.executeSql('CREATE TABLE IF NOT EXISTS Credentials(username TEXT, password TEXT)');
-
                     tx.executeSql('DELETE FROM Credentials');
-                    tx.executeSql('INSERT INTO Credentials VALUES(?, ?)', [ username, password ]);
+                    tx.executeSql('INSERT INTO Credentials VALUES(?, ?, ?)', [ username, password, uid ]);
                 }
                 )
 }

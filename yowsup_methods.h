@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_METHODS_H_1362030303
-#define YOWSUP_METHODS_H_1362030303
+#ifndef YOWSUP_METHODS_H_1362113365
+#define YOWSUP_METHODS_H_1362113365
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -47,6 +47,20 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         return asyncCallWithArgumentList(QLatin1String("clientconfig_send"), argumentList);
+    }
+
+    inline QDBusPendingReply<> code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(countryCode) << QVariant::fromValue(phoneNumber) << QVariant::fromValue(code) << QVariant::fromValue(identity);
+        return asyncCallWithArgumentList(QLatin1String("code_register"), argumentList);
+    }
+
+    inline QDBusPendingReply<> code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(countryCode) << QVariant::fromValue(phoneNumber) << QVariant::fromValue(identity) << QVariant::fromValue(useText);
+        return asyncCallWithArgumentList(QLatin1String("code_request"), argumentList);
     }
 
     inline QDBusPendingReply<> contact_getProfilePicture(const QString &jid)

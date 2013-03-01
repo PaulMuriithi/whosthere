@@ -20,6 +20,11 @@
     <signal name="group_setPictureSuccess">
       <arg type="s" name="jid" />
     </signal>
+    <signal name="code_register_response">
+      <arg type="s" name="status" />
+      <arg type="s" name="reason" />
+      <arg type="s" name="pw" />
+    </signal>
     <signal name="presence_unavailable">
       <arg type="s" name="jid" />
     </signal>
@@ -229,6 +234,10 @@
       <arg type="s" name="name" />
       <arg type="s" name="data" />
       <arg type="b" name="wantsReceipt" />
+    </signal>
+    <signal name="code_request_response">
+      <arg type="s" name="status" />
+      <arg type="s" name="reason" />
     </signal>
     <signal name="presence_updated">
       <arg type="s" name="jid" />

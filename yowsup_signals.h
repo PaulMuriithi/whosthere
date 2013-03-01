@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_SIGNALS_H_1362030303
-#define YOWSUP_SIGNALS_H_1362030303
+#ifndef YOWSUP_SIGNALS_H_1362113365
+#define YOWSUP_SIGNALS_H_1362113365
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -46,6 +46,8 @@ Q_SIGNALS: // SIGNALS
     void audio_received(const QString &messageId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);
+    void code_register_response(const QString &status, const QString &reason, const QString &pw);
+    void code_request_response(const QString &status, const QString &reason);
     void contact_gotProfilePicture(const QString &jid, const QString &filename);
     void contact_gotProfilePictureId(const QString &jid, const QString &pictureId);
     void contact_paused(const QString &jid);

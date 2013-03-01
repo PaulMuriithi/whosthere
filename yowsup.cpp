@@ -16,13 +16,9 @@ void YowSup::ready() {
     }
 }
 
-void YowSup::login(const QString& username, const QString& password) {
-
-    qDebug() << "YowSup login";
-    if(ym || ys) {
-        emit auth_success(username);
-        return;
-    }
+bool YowSup::connectDbus() {
+    if(ym && ys)
+        return true;
 
     yowsup_main* yb = new yowsup_main("com.yowsup.methods", "/com/yowsup/methods", QDBusConnection::sessionBus(), parent());
     //This will show invalid, even though dbus activation will kick in at init() and launch yowsup
@@ -35,8 +31,8 @@ void YowSup::login(const QString& username, const QString& password) {
 
     ym = new yowsup_methods("com.yowsup.methods", "/com/yowsup/whosthere/methods", QDBusConnection::sessionBus(), parent());
     if( !ym->isValid() ) {
-        emit auth_fail(username, QString("Dbus error:") + ym->lastError().message());
-        return;
+        emit disconnected(QString("Dbus error:") + ym->lastError().message());
+        return false;
     }
 
     ym->disconnect("");
@@ -44,8 +40,8 @@ void YowSup::login(const QString& username, const QString& password) {
     /* connect com.yowsup.signal */
     ys = new yowsup_signals("com.yowsup.signals", "/com/yowsup/whosthere/signals", QDBusConnection::sessionBus(), parent());
     if( !ys->isValid() ) {
-        emit auth_fail(username, QString("Dbus error:") + ys->lastError().message());
-        return;
+        emit disconnected(QString("Dbus error:") + ys->lastError().message());
+        return false;
     }
 
 #define CN(X) connect(ys, &yowsup_signals::X, this, &YowSup::X)
@@ -98,12 +94,55 @@ void YowSup::login(const QString& username, const QString& password) {
     CN(status_dirty);
     CN(vcard_received);
     CN(video_received);
+    CN(code_register_response);
+    CN(code_request_response);
 #undef CN
+    return true;
+}
+
+void YowSup::login(const QString& username, const QString& password) {
+    qDebug() << "YowSup login";
+    if(!connectDbus()) {
+        emit auth_fail(username, "Could not connect to dbus");
+        return;
+    }
 
     QDBusPendingReply<> r = ym->auth_login(username, password);
     r.waitForFinished();
     if( r.isError() ) {
         emit auth_fail(username, QString("Dbus error on auth_login:") + r.error().message());
+        return;
+    }
+}
+
+void YowSup::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText) {
+    qDebug() << "YowSup code request";
+    if(!connectDbus()) {
+        return;
+    }
+
+    QDBusPendingReply<> r = ym->code_request(countryCode, phoneNumber, identity, useText);
+    r.waitForFinished();
+    if( r.isError() ) {
+        qDebug() << "code_request: Dbus error: " <<r.error().message();
+        //TODO
+        //emit code_request_response();
+        return;
+    }
+}
+
+void YowSup::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity) {
+    qDebug() << "YowSup code request";
+    if(!connectDbus()) {
+        return;
+    }
+
+    QDBusPendingReply<> r = ym->code_register(countryCode, phoneNumber, code, identity);
+    r.waitForFinished();
+    if( r.isError() ) {
+        qDebug() << "code_register: Dbus error: " <<r.error().message();
+        //TODO
+        //emit code_register_response();
         return;
     }
 }
@@ -136,6 +175,20 @@ void YowSup::X(T1 arg1, T2 arg2) { \
     } \
 }
 
+#define DBUS_METHOD4(X, T1, T2, T3, T4) \
+void YowSup::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
+    if(!ym) {\
+        qDebug() << "ym == NULL"; \
+        return; \
+    } \
+    QDBusPendingReply<> r = ym->X(arg1, arg2, arg3, arg4); \
+    r.waitForFinished(); \
+    if( r.isError() ) { \
+        emit disconnected(QString("Dbus error on " #X ": ") + r.error().message()); \
+        return; \
+    } \
+}
+
 #define DBUS_METHOD2_RETURN(X, R, T1, T2) \
 R YowSup::X(T1 arg1, T2 arg2) { \
     if(!ym) {\
@@ -161,3 +214,4 @@ DBUS_METHOD2(subject_ack,const QString&,const QString&)
 DBUS_METHOD2(notification_ack,const QString&,const QString&)
 DBUS_METHOD2(visible_ack,const QString&,const QString&)
 DBUS_METHOD2(delivered_ack,const QString&,const QString&)
+

@@ -28,7 +28,7 @@ Rectangle {
         Page {
             id: page_login
             visible: false
-            title: "Login"
+            title: "Login/Register"
             anchors.fill: parent
             onVisibleChanged: WhosThere.fillCredentials();
             Column {
@@ -52,7 +52,7 @@ Rectangle {
                                 return;
 
                             yowsup.login(username_txt.text, password_txt.text);
-                            WhosThere.saveCredentials(username_txt.text, password_txt.text);
+                            WhosThere.saveCredentials(username_txt.text, password_txt.text, uid_txt.text);
                         }
                     }
                     Button {
@@ -81,6 +81,67 @@ Rectangle {
                             pagestack.push(page_contacts);
                         }
                     }
+                }
+                Label {
+                    text: "Register"
+                    font.italic: true
+                }
+                Label {
+                    text: "Registration is a two step process: First, enter your country code (e.g. '1' for US) and telephone number below (without country code and without leading 0), then tap 'Request code'. A code will be send via text to your number. Enter the code below (without the hyphen) and click 'Request password'. The password will appear in the password field above. Please save it somewhere! You can now login."
+                    wrapMode: Text.WordWrap
+                    width: parent.width
+                }
+                Row {
+                    TextField {
+                        id: countrycode_txt
+                        placeholderText: "Country code"
+                        width: 120
+                    }
+                    TextField {
+                        id: username_reg_txt
+                        placeholderText: "Telephone number"
+                        //height: 28
+                    }
+                    Button {
+                        text: "Request code"
+                        width: 150
+                        onClicked: {
+                            if(username_reg_txt.text == "" || countrycode_txt.text == "")
+                                return;
+                            console.log("onClicked: call code_request");
+                            yowsup.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
+                            //requesting the code invalidates the old password
+                            WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
+                        }
+                    }
+                }
+                Row {
+                    TextField {
+                        id: code_txt
+                        placeholderText: "Code you got via text"
+                        //height: 28
+                    }
+                    Button {
+                        text: "Request password"
+                        width: 150
+                        onClicked: {
+                            if(username_reg_txt.text == "" || countrycode_txt.text == ""
+                                    || code_txt.text == "")
+                                return;
+                            console.log("onClicked: call code_register");
+                            var code = code_txt.text.replace('-','');
+
+                            yowsup.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
+                        }
+                    }
+                }
+                Label {
+                    id: uid_txt
+                }
+
+                Label {
+                    text: "By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>";
+                    onLinkActivated: Qt.openUrlExternally(link)
                 }
             }
         }
@@ -241,6 +302,22 @@ Rectangle {
         onPing: {
             console.log("onPing: " + pingId);
             pong(pingId);
+        }
+        onCode_request_response: {
+            console.log("onCode_request_response: " + status + " " + reason);
+            if( status != 'send' ) {
+                //TODO: some error has occured, look into reason
+            }
+        }
+        onCode_register_response: {
+            console.log("onCode_register_response: " + status + " " + reason);
+            if(status == 'ok') {
+                WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, pw, uid_txt.text);
+                password_txt.text = pw;
+                username_txt.text = countrycode_txt.text+username_reg_txt.text;
+            } else {
+                //TODO: error msg
+            }
         }
     }
 }

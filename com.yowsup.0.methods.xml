@@ -105,6 +105,12 @@
     <method name="getVersion">
       <arg direction="out" type="s" />
     </method>
+    <method name="code_request">
+      <arg direction="in"  type="ay" name="countryCode" />
+      <arg direction="in"  type="ay" name="phoneNumber" />
+      <arg direction="in"  type="ay" name="identity" />
+      <arg direction="in"  type="b" name="useText" />
+    </method>
     <method name="message_videoSend">
       <arg direction="in"  type="v" name="jid" />
       <arg direction="in"  type="v" name="url" />
@@ -137,6 +143,12 @@
       <arg direction="in"  type="s" name="jid" />
       <arg direction="in"  type="ay" name="message" />
       <arg direction="out" type="s" />
+    </method>
+    <method name="code_register">
+      <arg direction="in"  type="ay" name="countryCode" />
+      <arg direction="in"  type="ay" name="phoneNumber" />
+      <arg direction="in"  type="ay" name="code" />
+      <arg direction="in"  type="ay" name="identity" />
     </method>
     <method name="presence_sendAvailable">
     </method>
