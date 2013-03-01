@@ -1,0 +1,15 @@
+Source: whosthere
+Section: comm
+Priority: extra
+Maintainer: Matthias Gehre <M.Gehre@gmx.de>
+Build-Depends: debhelper (>= 8.0.0), qt5-qmake, qtbase5-dev, qtchooser, qtdeclarative5-dev
+Standards-Version: 3.9.3
+Homepage: https://github.com/mgehre/whosthere
+#Vcs-Git: git://git.debian.org/collab-maint/whosthere.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/whosthere.git;a=summary
+
+Package: whosthere
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, yowsup, libqt5sql5-sqlite, qtdeclarative5-localstorage-plugin
+Description:  A WhatsApp client
+ WhosThere is a client for the WhatsApp protocol
