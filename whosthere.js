@@ -35,10 +35,13 @@ function updateMessages() {
 
 function openDB() {
     var db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000,
-              function(tx) {
-                  tx.executeSql('CREATE TABLE IF NOT EXISTS Credentials(username TEXT, password TEXT, uid TEXT)');
-                  tx.executeSql('CREATE TABLE IF NOT EXISTS Messages(type TEXT, content TEXT, jid TEXT, msgId TEXT, timestamp INT, incoming BOOL, sent BOOL, delivered BOOL)');
-               });
+            function(db) {
+                db.transaction(
+                    function(tx) {
+                        tx.executeSql('CREATE TABLE IF NOT EXISTS Credentials(username TEXT, password TEXT, uid TEXT)');
+                        tx.executeSql('CREATE TABLE IF NOT EXISTS Messages(type TEXT, content TEXT, jid TEXT, msgId TEXT, timestamp INT, incoming BOOL, sent BOOL, delivered BOOL)');
+                    });
+            });
 
     if(db.version == "1.0") {
         console.log("Updating db to 1.1");
