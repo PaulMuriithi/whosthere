@@ -5,14 +5,12 @@ import Ubuntu.Components.ListItems 0.1 as ListItem
 import Yowsup 1.0
 import "whosthere.js" as WhosThere
 
-Rectangle {
+MainView {
     id: root
-    width: units.gu(60)
-    height: units.gu(80)
-    color: "lightgray"
-
-    property real margins: units.gu(2)
-    property real buttonWidth: units.gu(9)
+    width: units.gu(100)
+    height: units.gu(75)
+    //anchors.fill: parent
+    //color: "lightgray"
 
     PageStack {
         id: pagestack
@@ -36,12 +34,12 @@ Rectangle {
                 TextField {
                     id: username_txt
                     placeholderText: "Telephone number without leading + or 00"
-                    width: parent.width; height: 28
+                    width: parent.width; height: units.gu(4)
                 }
                 TextField {
                     id: password_txt
                     placeholderText: "Password in base64"
-                    width: parent.width; height: 28
+                    width: parent.width; height: units.gu(4)
                 }
                 Row {
                     Button {
@@ -95,7 +93,7 @@ Rectangle {
                     TextField {
                         id: countrycode_txt
                         placeholderText: "Country code"
-                        width: 120
+                        width: units.gu(120)
                     }
                     TextField {
                         id: username_reg_txt
