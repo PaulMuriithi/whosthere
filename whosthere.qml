@@ -94,7 +94,7 @@ MainView {
                     TextField {
                         id: countrycode_txt
                         placeholderText: "Country code"
-                        width: units.gu(120)
+                        width: 120
                     }
                     TextField {
                         id: username_reg_txt
