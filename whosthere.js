@@ -121,15 +121,14 @@ function fillCredentials() {
                         if(rs.rows.length > 0) {
                             username_txt.text = rs.rows.item(0).username;
                             password_txt.text = rs.rows.item(0).password;
-                            if(rs.rows.item(0).uid)
+                            if(rs.rows.item(0).uid && rs.rows.item(0).uid.length == 32)
                                 uid_txt.text = rs.rows.item(0).uid;
-                            else
-                                uid_txt.text = createUID();
                         }
                     } catch(err) {
                         console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                        uid_txt.text = createUID();
                     }
+                    if(uid_txt.text.length != 32)
+                        uid_txt.text = createUID();
                 }
                 )
 }
