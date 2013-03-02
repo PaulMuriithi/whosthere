@@ -7,8 +7,8 @@ import "whosthere.js" as WhosThere
 
 MainView {
     id: root
-    width: units.gu(100)
-    height: units.gu(75)
+    width: units.gu(42)
+    height: units.gu(67)
     //anchors.centerIn: parent
     //anchors.fill: parent
     //color: "lightgray"
@@ -32,6 +32,16 @@ MainView {
             onVisibleChanged: WhosThere.fillCredentials();
             Column {
                 anchors.fill: parent
+                Label {
+                    text: "Login"
+                    font.underline: true
+                    font.italic: true
+                }
+                Label {
+                    text: "Login with your mobile number (including country code, excluding leading + or 00) and password. To obtain a password, see section 'Register' below."
+                    wrapMode: Text.WordWrap
+                    anchors { left: parent.left; right: parent.right }
+                }
                 TextField {
                     id: username_txt
                     placeholderText: "Telephone number without leading + or 00"
@@ -84,54 +94,54 @@ MainView {
                 Label {
                     text: "Register"
                     font.italic: true
+                    font.underline: true
                 }
                 Label {
-                    text: "Registration is a two step process: First, enter your country code (e.g. '1' for US) and telephone number below (without country code and without leading 0), then tap 'Request code'. A code will be send via text to your number. Enter the code below (without the hyphen) and click 'Request password'. The password will appear in the password field above. Please save it somewhere! You can now login."
+                    text: "Registration is a two step process: First, enter your country code (e.g. '1' for US) and telephone number below (without country code and without leading 0), then tap 'Request code'. A code will be send via text to your number. Enter the code below and click 'Request password'. The password will appear in the password field above. Please save it somewhere! You can now login."
                     wrapMode: Text.WordWrap
-                    width: parent.width
+                    anchors { left: parent.left; right: parent.right }
                 }
                 Row {
                     TextField {
                         id: countrycode_txt
-                        placeholderText: "Country code"
-                        width: 120
+                        placeholderText: "cc"
+                        width: units.gu(10)
                     }
                     TextField {
                         id: username_reg_txt
-                        placeholderText: "Telephone number"
+                        placeholderText: "mobile number wo. cc"
                         //height: 28
-                    }
-                    Button {
-                        text: "Request code"
-                        width: 150
-                        onClicked: {
-                            if(username_reg_txt.text == "" || countrycode_txt.text == "")
-                                return;
-                            console.log("onClicked: call code_request");
-                            yowsup.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
-                            //requesting the code invalidates the old password
-                            WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
-                        }
                     }
                 }
-                Row {
-                    TextField {
-                        id: code_txt
-                        placeholderText: "Code you got via text"
-                        //height: 28
+                Button {
+                    text: "Request code"
+                    width: units.gu(18)
+                    onClicked: {
+                        if(username_reg_txt.text == "" || countrycode_txt.text == "")
+                            return;
+                        console.log("onClicked: call code_request");
+                        yowsup.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
+                        //requesting the code invalidates the old password
+                        WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
                     }
-                    Button {
-                        text: "Request password"
-                        width: 150
-                        onClicked: {
-                            if(username_reg_txt.text == "" || countrycode_txt.text == ""
-                                    || code_txt.text == "")
-                                return;
-                            console.log("onClicked: call code_register");
-                            var code = code_txt.text.replace('-','');
+                }
+                TextField {
+                    id: code_txt
+                    placeholderText: "Code you got via text"
+                    //height: 28
+                }
+                Button {
+                    text: "Request password"
+                    width: units.gu(22)
+                    onClicked: {
+                        if(username_reg_txt.text == "" || countrycode_txt.text == ""
+                                || code_txt.text == "")
+                            return;
+                        console.log("onClicked: call code_register");
+                        //Remove hyphon if it exists
+                        var code = code_txt.text.replace('-','');
 
-                            yowsup.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
-                        }
+                        yowsup.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
                     }
                 }
                 Label {
@@ -141,6 +151,7 @@ MainView {
                 Label {
                     text: "By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>";
                     onLinkActivated: Qt.openUrlExternally(link)
+                    wrapMode: Text.WordWrap
                 }
             }
         }
@@ -168,7 +179,6 @@ MainView {
             tools: ToolbarActions {
                 Action {
                     text: "Logout"
-                    iconSource: Qt.resolvedUrl("avatar_contacts_list.png")
                     onTriggered: {
                         pagestack.push(page_login);
                     }
@@ -214,7 +224,7 @@ MainView {
                 id: newMessage_inpt
                 placeholderText: "Type message"
                 //color: "white"
-                width: parent.width; height: 28
+                width: parent.width; height: units.gu(4)
                 anchors {bottom: parent.bottom; left: parent.left; right: parent.right }
                 onAccepted: {
                     if( text === "" )
@@ -223,8 +233,8 @@ MainView {
                     console.log("Sent message has id " + msgId);
 
                     WhosThere.addMessage({ "type": "message", "content": text,
-                                           "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
-                                           "incoming": false, "sent": false, "delivered": false});
+                                             "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
+                                             "incoming": false, "sent": false, "delivered": false});
                     text = "";
                 }
             }
@@ -260,8 +270,8 @@ MainView {
             if(wantsReceipt)
                 message_ack(jid, msgId);
             WhosThere.addMessage({ "type": "message", "content": content,
-                                   "jid": jid, "msgId": msgId, "timestamp": timestamp,
-                                   "incoming": true, "sent": false, "delivered": false});
+                                     "jid": jid, "msgId": msgId, "timestamp": timestamp,
+                                     "incoming": true, "sent": false, "delivered": false});
             WhosThere.updateMessages();
         }
         onReceipt_messageDelivered: {
