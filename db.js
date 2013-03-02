@@ -69,32 +69,15 @@ function loadMessages() {
 
     db.transaction(
                 function(tx) {
-                    /*try*/ {
+                    try {
                         var rs = tx.executeSql('SELECT * FROM Messages');
                         for(var i=0;i < rs.rows.length; ++i) {
                             console.log("loaded message " + rs.rows.item(i).jid);
                             allMessages.append(rs.rows.item(i));
-                            /*var result = {};
-                            for(var key in rs.rows.item(i).kesy) {
-                                result[key] = rs.rows.item(i).key;
-                            }*/
-                            }
-
-
-                            /*allMessages.append({"type": rs.rows.item(i).type,
-                                                   "content": rs.rows.item(i).content,
-                                                   "jid": rs.rows.item(i).jid,
-                                                   "msgId": rs.rows.item(i).msgId,
-                                                   "timestamp": rs.rows.item(i).timestamp,
-                                                   "incoming": !!rs.rows.item(i).incoming,
-                                                   "sent": !!rs.rows.item(i).sent,
-                                                   "delivered": !!rs.rows.item(i).delivered,
-
-                                                });*/
                         }
-                    /*catch(err) {
+                    } catch(err) {
                         console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                    }*/
+                    }
                 });
     updateMessages();
 }
