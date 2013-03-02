@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>whosthere.qml</file>
-        <file>whosthere.js</file>
+        <file>db.js</file>
     </qresource>
 </RCC>

@@ -2,8 +2,8 @@ import QtQuick 2.0
 import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItem
-import Yowsup 1.0
-import "whosthere.js" as WhosThere
+import WhosThere 1.0
+import "db.js" as DB
 
 MainView {
     id: root
@@ -17,11 +17,11 @@ MainView {
         id: pagestack
         anchors.fill: parent
         Component.onCompleted: {
-            WhosThere.updateMessages();
+            DB.updateMessages();
             push(page_login)
         }
         Component.onDestruction: {
-            yowsup.disconnect("");
+            whosthere.disconnect("");
         }
 
         Page {
@@ -29,7 +29,7 @@ MainView {
             visible: false
             title: "Login/Register"
             anchors.fill: parent
-            onVisibleChanged: WhosThere.fillCredentials();
+            onVisibleChanged: DB.fillCredentials();
             Column {
                 anchors.fill: parent
                 Label {
@@ -60,8 +60,8 @@ MainView {
                             if( username_txt.text == "" || password_txt.text == "")
                                 return;
 
-                            yowsup.login(username_txt.text, password_txt.text);
-                            WhosThere.saveCredentials(username_txt.text, password_txt.text, uid_txt.text);
+                            whosthere.login(username_txt.text, password_txt.text);
+                            DB.saveCredentials(username_txt.text, password_txt.text, uid_txt.text);
                         }
                     }
                     Button {
@@ -86,7 +86,7 @@ MainView {
                             allMessages.append({ "type": "message", "content": ".. and I'm answering",
                                                    "jid": "155556777777@s.whatsapp.net", "msgId": "3", "timestamp": 17,
                                                    "incoming": false, "sent": false, "delivered": false});
-                            WhosThere.updateMessages();
+                            DB.updateMessages();
                             pagestack.push(page_contacts);
                         }
                     }
@@ -120,9 +120,9 @@ MainView {
                         if(username_reg_txt.text == "" || countrycode_txt.text == "")
                             return;
                         console.log("onClicked: call code_request");
-                        yowsup.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
+                        whosthere.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
                         //requesting the code invalidates the old password
-                        WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
+                        DB.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
                     }
                 }
                 TextField {
@@ -141,7 +141,7 @@ MainView {
                         //Remove hyphon if it exists
                         var code = code_txt.text.replace('-','');
 
-                        yowsup.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
+                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
                     }
                 }
                 Label {
@@ -172,7 +172,7 @@ MainView {
                     subText: "Last message: " + content
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: WhosThere.showConversation(jid);
+                        onClicked: DB.showConversation(jid);
                     }
                 }
             }
@@ -210,10 +210,17 @@ MainView {
                     Column {
                         x: incoming ? parent.width/2 : 0
                         Label { //Text
+                            visible: type == "message"
                             text: content
                         }
+                        Image {
+                            visible: type == "image"
+                            source: type == "image" ? "image://drawable/" + msgId : ""
+                        }
+
                         Label { //Status
-                            text: (sent ? "sent " : "") + (delivered ? "delivered" : "")
+                            text: (timestamp ? (new Date(timestamp*1000) + " ") : "" )
+                                               +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
                             font.italic: true
                             font.pointSize: 6
                         }
@@ -229,10 +236,10 @@ MainView {
                 onAccepted: {
                     if( text === "" )
                         return;
-                    var msgId = yowsup.message_send(page_conversation.jid, text)
+                    var msgId = whosthere.message_send(page_conversation.jid, text)
                     console.log("Sent message has id " + msgId);
 
-                    WhosThere.addMessage({ "type": "message", "content": text,
+                    DB.addMessage({ "type": "message", "content": text,
                                              "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
                                              "incoming": false, "sent": false, "delivered": false});
                     text = "";
@@ -243,20 +250,25 @@ MainView {
     ListModel {
         id: allMessages
     }
-    Yowsup {
-        id: yowsup
+    WhosThere {
+        id: whosthere
+
+        onGetPreviewImage: {
+            return DB.getPreviewImage(id);
+        }
+
         onAuth_success: {
             console.log("auth success for " + username);
             ready();
-            WhosThere.loadMessages();
+            DB.loadMessages();
             pagestack.push(page_contacts);
         }
         onAuth_fail: {
-            //PopupUtils.open(errorPopover, yowsup);
+            //PopupUtils.open(errorPopover, whosthere);
             console.log("auth fail for " + username + ", reason: " + reason);
         }
         onMessage_error: {
-            console.log("onMessage_error " + messageId + " jid: " + jid + " errorCode: "+ errorCode);
+            console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
         }
         onDisconnected: {
             console.log("OnDisconnected: " + reason);
@@ -269,25 +281,37 @@ MainView {
             console.log("OnMessage_received: " + msgId + " " + jid + " " + content + " " + timestamp + " " + wantsReceipt);
             if(wantsReceipt)
                 message_ack(jid, msgId);
-            WhosThere.addMessage({ "type": "message", "content": content,
-                                     "jid": jid, "msgId": msgId, "timestamp": timestamp,
+            DB.addMessage({ "type": "message", "content": content,
+                                     "jid": jid, "msgId": msgId, "timestamp":  timestamp,
                                      "incoming": true, "sent": false, "delivered": false});
-            WhosThere.updateMessages();
+            DB.updateMessages();
         }
+        onImage_received: {
+            console.log("onImage_received " + preview + " " + url + " " + size);
+
+            if(wantsReceipt)
+                message_ack(jid, msgId);
+            DB.addMessage({ "type": "image", "preview": preview,
+                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                                     "size": size, "url" : url,
+                                     "incoming": true, "sent": false, "delivered": false});
+            DB.updateMessages();
+        }
+
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             delivered_ack(jid, msgId);
-            var msg = WhosThere.getMessage(jid, msgId);
+            var msg = DB.getMessage(jid, msgId);
             if(msg)
                 msg.delivered = true;
-            WhosThere.updateMessages();
+            DB.updateMessages();
         }
         onReceipt_messageSent: {
             console.log("OnReceipt_messageSent: " + jid + " " + msgId);
-            var msg = WhosThere.getMessage(jid, msgId);
+            var msg = DB.getMessage(jid, msgId);
             if(msg)
                 msg.sent = true;
-            WhosThere.updateMessages();
+            DB.updateMessages();
         }
         onReceipt_visible: {
             console.log("OnReceipt_visible: " + jid + " " + msgId);
@@ -321,7 +345,7 @@ MainView {
         onCode_register_response: {
             console.log("onCode_register_response: " + status + " " + reason);
             if(status == 'ok') {
-                WhosThere.saveCredentials(countrycode_txt.text+username_reg_txt.text, pw, uid_txt.text);
+                DB.saveCredentials(countrycode_txt.text+username_reg_txt.text, pw, uid_txt.text);
                 password_txt.text = pw;
                 username_txt.text = countrycode_txt.text+username_reg_txt.text;
             } else {

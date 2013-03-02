@@ -42,16 +42,18 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
-#include "yowsup.h"
+#include "whosthere.h"
+#include "imageprovider.h"
 
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<YowSup>("Yowsup", 1,0, "Yowsup");
+    qmlRegisterType<WhosThere>("WhosThere", 1,0, "WhosThere");
 
     QQuickView viewer;
     viewer.engine()->addImportPath(":");
+    viewer.engine()->addImageProvider("drawable", new ImageProvider);
     viewer.setSource(QUrl("qrc:whosthere.qml"));
     //viewer.setSource(QUrl("qrc:Error.qml"));
     viewer.show();

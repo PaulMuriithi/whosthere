@@ -3,7 +3,7 @@
 <node name="/com/yowsup/0/signals">
   <interface name="com.yowsup.signals">
     <signal name="video_received">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="preview" />
       <arg type="s" name="url" />
@@ -29,14 +29,14 @@
       <arg type="s" name="jid" />
     </signal>
     <signal name="audio_received">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="url" />
       <arg type="i" name="size" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="location_received">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="name" />
       <arg type="s" name="preview" />
@@ -49,11 +49,11 @@
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="timestamp" />
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="group_locationReceived">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="name" />
@@ -73,13 +73,13 @@
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="timestamp" />
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="pong">
     </signal>
     <signal name="group_audioReceived">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="url" />
@@ -107,7 +107,7 @@
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="timestamp" />
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="message_received">
@@ -125,7 +125,7 @@
     <signal name="status_dirty">
     </signal>
     <signal name="message_error">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="errorCode" />
     </signal>
@@ -136,7 +136,7 @@
       <arg type="s" name="errorCode" />
     </signal>
     <signal name="group_vcardReceived">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="name" />
@@ -154,11 +154,11 @@
     <signal name="notification_contactProfilePictureUpdated">
       <arg type="s" name="jid" />
       <arg type="s" name="timestamp" />
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="group_imageReceived">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="preview" />
@@ -213,7 +213,7 @@
       <arg type="s" name="jid" />
     </signal>
     <signal name="group_videoReceived">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="author" />
       <arg type="s" name="preview" />
@@ -226,10 +226,10 @@
     </signal>
     <signal name="profile_setStatusSuccess">
       <arg type="s" name="jid" />
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
     </signal>
     <signal name="vcard_received">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
       <arg type="s" name="name" />
       <arg type="s" name="data" />
@@ -251,11 +251,11 @@
       <arg type="s" name="jid" />
     </signal>
     <signal name="image_received">
-      <arg type="s" name="messageId" />
+      <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
-      <arg type="s" name="preview" />
+      <arg type="ay" name="preview" />
       <arg type="s" name="url" />
-      <arg type="s" name="size" />
+      <arg type="i" name="size" />
       <arg type="b" name="wantsReceipt" />
     </signal>
     <signal name="contact_paused">

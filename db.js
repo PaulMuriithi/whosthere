@@ -38,16 +38,26 @@ function openDB() {
             function(db) {
                 db.transaction(
                     function(tx) {
-                        tx.executeSql('CREATE TABLE IF NOT EXISTS Credentials(username TEXT, password TEXT, uid TEXT)');
-                        tx.executeSql('CREATE TABLE IF NOT EXISTS Messages(type TEXT, content TEXT, jid TEXT, msgId TEXT, timestamp INT, incoming BOOL, sent BOOL, delivered BOOL)');
+                        tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT)');
+                        tx.executeSql('CREATE TABLE Messages(type TEXT, jid TEXT, msgId TEXT, content TEXT, preview BLOB, url TEXT, size INT, timestamp TIMESTAMP, incoming BOOL, sent BOOL, delivered BOOL)');
                     });
+                db.changeVersion("","3");
             });
+    //After the database has been created fresh, its db.version == "" until we do openDatabaseSync() again
+    if(db.version == "")
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
 
-    if(db.version == "1.0") {
-        console.log("Updating db to 1.1");
-        db.changeVersion("1.0","1.1", function(tx) {
-            tx.executeSql('ALTER TABLE Credentials ADD uid TEXT');
+    if(db.version == "") //Artifact from first release
+        console.log("Database broken, please rm -R .local/share/whosthere")
+
+    console.log('openDb with version '+ db.version);
+
+    if(db.version == "2") {
+        console.log("Updating db to 3");
+        db.changeVersion("2","3", function(tx) {
+            tx.executeSql('ALTER TABLE Messages ADD preview BLOB');
             });
+        console.log("Now at version " + db.version);
     }
     return db;
 }
@@ -59,11 +69,19 @@ function loadMessages() {
 
     db.transaction(
                 function(tx) {
-                    try {
+                    /*try*/ {
                         var rs = tx.executeSql('SELECT * FROM Messages');
                         for(var i=0;i < rs.rows.length; ++i) {
                             console.log("loaded message " + rs.rows.item(i).jid);
-                            allMessages.append({"type": rs.rows.item(i).type,
+                            allMessages.append(rs.rows.item(i));
+                            /*var result = {};
+                            for(var key in rs.rows.item(i).kesy) {
+                                result[key] = rs.rows.item(i).key;
+                            }*/
+                            }
+
+
+                            /*allMessages.append({"type": rs.rows.item(i).type,
                                                    "content": rs.rows.item(i).content,
                                                    "jid": rs.rows.item(i).jid,
                                                    "msgId": rs.rows.item(i).msgId,
@@ -72,12 +90,11 @@ function loadMessages() {
                                                    "sent": !!rs.rows.item(i).sent,
                                                    "delivered": !!rs.rows.item(i).delivered,
 
-                                                });
+                                                });*/
                         }
-                    }
-                    catch(err) {
+                    /*catch(err) {
                         console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                    }
+                    }*/
                 });
     updateMessages();
 }
@@ -89,9 +106,10 @@ function addMessage(msg) {
 
     db.transaction(
                 function(tx) {
-                    tx.executeSql('INSERT INTO Messages VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+                    tx.executeSql('INSERT INTO Messages (type, content, jid, msgId, timestamp, incoming, sent, delivered, preview, size, url ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                                   [ msg['type'], msg['content'], msg['jid'], msg['msgId'], msg['timestamp'],
-                                  msg['incoming'], msg['sent'], msg['delivered']]);
+                                  msg['incoming'], msg['sent'], msg['delivered'],
+                                  msg['preview'], msg['size'], msg['url']]);
                 })
 }
 
@@ -140,7 +158,26 @@ function saveCredentials(username, password, uid) {
     db.transaction(
                 function(tx) {
                     tx.executeSql('DELETE FROM Credentials');
-                    tx.executeSql('INSERT INTO Credentials VALUES(?, ?, ?)', [ username, password, uid ]);
+                    tx.executeSql('INSERT INTO Credentials (username, password, uid) VALUES(?, ?, ?)', [ username, password, uid ]);
                 }
                 )
+}
+
+function getPreviewImage(id) {
+    console.log("saveCredentials");
+    var db = openDB();
+
+    var data;
+    db.readTransaction(
+                function(tx) {
+                    var rs = tx.executeSql('SELECT preview FROM Messages WHERE msgId = ? AND type ="image"', id);
+                    if(rs.rows.length == 0) {
+                        console.log('No preview image found for id ' + id);
+                    } else {
+                        data = rs.rows.item(0).preview;
+                    }
+                }
+                )
+    console.log("data: " + data)
+    return data;
 }

@@ -1,13 +1,21 @@
 #include <QDebug>
 #include "yowsup_main.h"
-#include "yowsup.h"
+#include "whosthere.h"
 
-YowSup::YowSup(QQuickItem *parent) :
-    QQuickItem(parent), ys(0), ym(0)
-{
+static WhosThere* instance = NULL;
+
+WhosThere* WhosThere::get() {
+    return instance;
 }
 
-void YowSup::ready() {
+WhosThere::WhosThere(QQuickItem *parent) :
+    QQuickItem(parent), ys(0), ym(0)
+{
+    Q_ASSERT(instance == NULL);
+    instance = this;
+}
+
+void WhosThere::ready() {
     QDBusPendingReply<> r = ym->ready();
     r.waitForFinished();
     if( r.isError() ) {
@@ -16,7 +24,7 @@ void YowSup::ready() {
     }
 }
 
-bool YowSup::connectDbus() {
+bool WhosThere::connectDbus() {
     if(ym && ys)
         return true;
 
@@ -44,7 +52,7 @@ bool YowSup::connectDbus() {
         return false;
     }
 
-#define CN(X) connect(ys, &yowsup_signals::X, this, &YowSup::X)
+#define CN(X) connect(ys, &yowsup_signals::X, this, &WhosThere::X)
     CN(audio_received);
     CN(auth_fail);
     CN(auth_success);
@@ -100,7 +108,7 @@ bool YowSup::connectDbus() {
     return true;
 }
 
-void YowSup::login(const QString& username, const QString& password) {
+void WhosThere::login(const QString& username, const QString& password) {
     qDebug() << "YowSup login";
     if(!connectDbus()) {
         emit auth_fail(username, "Could not connect to dbus");
@@ -115,7 +123,7 @@ void YowSup::login(const QString& username, const QString& password) {
     }
 }
 
-void YowSup::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText) {
+void WhosThere::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText) {
     qDebug() << "YowSup code request";
     if(!connectDbus()) {
         return;
@@ -131,7 +139,7 @@ void YowSup::code_request(const QByteArray &countryCode, const QByteArray &phone
     }
 }
 
-void YowSup::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity) {
+void WhosThere::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity) {
     qDebug() << "YowSup code request";
     if(!connectDbus()) {
         return;
@@ -148,7 +156,7 @@ void YowSup::code_register(const QByteArray &countryCode, const QByteArray &phon
 }
 
 #define DBUS_METHOD1(X, T) \
-void YowSup::X(T arg) { \
+void WhosThere::X(T arg) { \
     if(!ym) {\
         qDebug() << "ym == NULL"; \
         return; \
@@ -162,7 +170,7 @@ void YowSup::X(T arg) { \
 }
 
 #define DBUS_METHOD2(X, T1, T2) \
-void YowSup::X(T1 arg1, T2 arg2) { \
+void WhosThere::X(T1 arg1, T2 arg2) { \
     if(!ym) {\
         qDebug() << "ym == NULL"; \
         return; \
@@ -176,7 +184,7 @@ void YowSup::X(T1 arg1, T2 arg2) { \
 }
 
 #define DBUS_METHOD4(X, T1, T2, T3, T4) \
-void YowSup::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
+void WhosThere::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
     if(!ym) {\
         qDebug() << "ym == NULL"; \
         return; \
@@ -190,7 +198,7 @@ void YowSup::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
 }
 
 #define DBUS_METHOD2_RETURN(X, R, T1, T2) \
-R YowSup::X(T1 arg1, T2 arg2) { \
+R WhosThere::X(T1 arg1, T2 arg2) { \
     if(!ym) {\
         qDebug() << "ym == NULL"; \
         return R(); \

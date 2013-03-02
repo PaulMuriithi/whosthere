@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_MAIN_H_1362113365
-#define YOWSUP_MAIN_H_1362113365
+#ifndef YOWSUP_MAIN_H_1362265086
+#define YOWSUP_MAIN_H_1362265086
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
