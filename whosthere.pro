@@ -27,3 +27,7 @@ OTHER_FILES += \
 
 target.path = $${PREFIX}/bin
 INSTALLS += target
+
+desktop.path = $${PREFIX}/share/applications/
+desktop.files = whosthere.desktop
+INSTALLS += desktop

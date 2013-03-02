@@ -2,8 +2,8 @@
 Encoding=UTF-8
 Type=Application
 Terminal=false
-Exec=/usr/bin/qmlscene
+Exec=/usr/bin/whosthere
 Name=whosthere
 GenericName=whosthere
-Comment=My project description
+Comment=A WhatsApp client
 Icon=ubuntu-qmlrunner
