@@ -1,5 +1,5 @@
 Source: whosthere
-Section: comm
+Section: net
 Priority: extra
 Maintainer: Matthias Gehre <M.Gehre@gmx.de>
 Build-Depends: debhelper (>= 8.0.0), qt5-qmake, qtbase5-dev, qtchooser, qtdeclarative5-dev

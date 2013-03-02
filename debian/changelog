@@ -1,3 +1,9 @@
+whosthere (1.0.6-0ubuntu2) quantal; urgency=low
+
+  * Changed section
+
+ -- Matthias Gehre <M.Gehre@gmx.de>  Fri, 01 Mar 2013 23:14:26 -0600
+
 whosthere (1.0.6-0ubuntu1) quantal; urgency=low
 
   * Initial release
