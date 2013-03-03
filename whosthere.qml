@@ -214,8 +214,15 @@ MainView {
                             text: content
                         }
                         Image {
+                            //Seems that the preview images are always 100x75
+                            width: units.gu(8)
+                            height: units.gu(6)
                             visible: type == "image"
                             source: type == "image" ? "image://drawable/" + msgId : ""
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: Qt.openUrlExternally(url)
+                            }
                         }
 
                         Label { //Status
@@ -252,10 +259,6 @@ MainView {
     }
     WhosThere {
         id: whosthere
-
-        onGetPreviewImage: {
-            return DB.getPreviewImage(id);
-        }
 
         onAuth_success: {
             console.log("auth success for " + username);
@@ -352,5 +355,8 @@ MainView {
                 //TODO: error msg
             }
         }
+    }
+    function getPreviewImage(id) {
+        return DB.getPreviewImage(id);
     }
 }
