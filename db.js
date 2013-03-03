@@ -66,6 +66,7 @@ function loadMessages() {
     console.log("loadMessages");
     var db = openDB();
 
+    allMessages.clear();
     db.transaction(
                 function(tx) {
                     try {
@@ -93,6 +94,26 @@ function addMessage(msg) {
                                   msg['incoming'], msg['sent'], msg['delivered'],
                                   msg['preview'], msg['size'], msg['url']]);
                 })
+}
+
+//Sets the delivered column to true
+function setDelivered(jid,msgId) {
+    var db = openDB();
+
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('UPDATE Messages SET "delivered"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
+                });
+}
+
+//Sets the sent column to true
+function setSent(jid,msgId) {
+    var db = openDB();
+
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('UPDATE Messages SET "sent"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
+                });
 }
 
 function createUID() {

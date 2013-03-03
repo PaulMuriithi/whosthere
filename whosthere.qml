@@ -304,17 +304,13 @@ MainView {
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             delivered_ack(jid, msgId);
-            var msg = DB.getMessage(jid, msgId);
-            if(msg)
-                msg.delivered = true;
-            DB.updateMessages();
+            DB.setDelivered(jid,msgId);
+            DB.loadMessages();
         }
         onReceipt_messageSent: {
             console.log("OnReceipt_messageSent: " + jid + " " + msgId);
-            var msg = DB.getMessage(jid, msgId);
-            if(msg)
-                msg.sent = true;
-            DB.updateMessages();
+            DB.setSent(jid,msgId);
+            DB.loadMessages();
         }
         onReceipt_visible: {
             console.log("OnReceipt_visible: " + jid + " " + msgId);
