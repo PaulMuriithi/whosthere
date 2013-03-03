@@ -27,35 +27,35 @@ MainView {
         Page {
             id: page_login
             visible: false
-            title: "Login/Register"
+            title: i18n.tr("Login/Register")
             anchors.fill: parent
             onVisibleChanged: DB.fillCredentials();
             Column {
                 anchors.fill: parent
                 Label {
-                    text: "Login"
+                    text: i18n.tr("Login")
                     font.underline: true
                     font.italic: true
                 }
                 Label {
-                    text: "Login with your mobile number (including country code, excluding leading + or 00) and password. To obtain a password, see section 'Register' below."
+                    text: i18n.tr("Login with your mobile number (including country code, excluding leading + or 00) and password. To obtain a password, see section 'Register' below.")
                     wrapMode: Text.WordWrap
                     anchors { left: parent.left; right: parent.right }
                 }
                 TextField {
                     id: username_txt
-                    placeholderText: "Telephone number without leading + or 00"
+                    placeholderText: i18n.tr("Telephone number without leading + or 00")
                     width: parent.width; height: units.gu(4)
                 }
                 TextField {
                     id: password_txt
-                    placeholderText: "Password in base64"
+                    placeholderText: i18n.tr("Password")
                     width: parent.width; height: units.gu(4)
                 }
                 Row {
                     Button {
                         id: login_btn
-                        text: "Log in"
+                        text: i18n.tr("Log in")
                         onClicked: {
                             if( username_txt.text == "" || password_txt.text == "")
                                 return;
@@ -65,7 +65,7 @@ MainView {
                         }
                     }
                     Button {
-                        text: "Demo"
+                        text: i18n.tr("Demo")
                         onClicked: {
                             allMessages.append({ "type": "message", "content": "Hi there",
                                                    "jid": "155556778317@s.whatsapp.net", "msgId": "1", "timestamp": 0,
@@ -92,29 +92,33 @@ MainView {
                     }
                 }
                 Label {
-                    text: "Register"
+                    text: i18n.tr("Register")
                     font.italic: true
                     font.underline: true
                 }
                 Label {
-                    text: "Registration is a two step process: First, enter your country code (e.g. '1' for US) and telephone number below (without country code and without leading 0), then tap 'Request code'. A code will be send via text to your number. Enter the code below and click 'Request password'. The password will appear in the password field above. Please save it somewhere! You can now login."
+                    text: i18n.tr("Registration is a two step process: First, enter your country code (e.g. '1' for US) "
+                                  +"and telephone number below (without country code and without leading 0), "
+                                  +"then tap 'Request code'. A code will be send via text to your number. "
+                                  +"Enter the code below and click 'Request password'. The password will appear in "
+                                  +"the password field above. Please save it somewhere! You can now login.")
                     wrapMode: Text.WordWrap
                     anchors { left: parent.left; right: parent.right }
                 }
                 Row {
                     TextField {
                         id: countrycode_txt
-                        placeholderText: "cc"
+                        placeholderText: i18n.tr("cc")
                         width: units.gu(10)
                     }
                     TextField {
                         id: username_reg_txt
-                        placeholderText: "mobile number wo. cc"
+                        placeholderText: i18n.tr("mobile number wo. cc")
                         //height: 28
                     }
                 }
                 Button {
-                    text: "Request code"
+                    text: i18n.tr("Request code")
                     width: units.gu(18)
                     onClicked: {
                         if(username_reg_txt.text == "" || countrycode_txt.text == "")
@@ -127,11 +131,11 @@ MainView {
                 }
                 TextField {
                     id: code_txt
-                    placeholderText: "Code you got via text"
+                    placeholderText: i18n.tr("Code you got via text")
                     //height: 28
                 }
                 Button {
-                    text: "Request password"
+                    text: i18n.tr("Request password")
                     width: units.gu(22)
                     onClicked: {
                         if(username_reg_txt.text == "" || countrycode_txt.text == ""
@@ -149,7 +153,7 @@ MainView {
                 }
 
                 Label {
-                    text: "By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>";
+                    text: i18n.tr("By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>");
                     onLinkActivated: Qt.openUrlExternally(link)
                     wrapMode: Text.WordWrap
                 }
@@ -159,7 +163,7 @@ MainView {
         Page {
             id: page_contacts
             visible: false
-            title: "Contacts"
+            title: i18n.tr("Contacts")
             anchors.fill: parent
             ListModel {
                 id: contactsModel
@@ -169,7 +173,7 @@ MainView {
                 model: contactsModel
                 delegate: ListItem.Subtitled {
                     text: jid + " ( time: " + timestamp + " )"
-                    subText: "Last message: " + content
+                    subText: i18n.tr("Last message: ") + content
                     MouseArea {
                         anchors.fill: parent
                         onClicked: DB.showConversation(jid);
@@ -191,10 +195,10 @@ MainView {
             id: page_conversation
             visible: false
             anchors.fill: parent
-            title: "Conversation with " + jid
+            title: i18n.tr("Conversation with " + jid)
             Button {
                 id: back_btn
-                text: "Back"
+                text: i18n.tr("Back")
                 anchors { left: parent.left }
                 onClicked: pagestack.push(page_contacts);
             }
@@ -271,7 +275,7 @@ MainView {
             }
             TextField {
                 id: newMessage_inpt
-                placeholderText: "Type message"
+                placeholderText:  i18n.tr("Type message")
                 //color: "white"
                 height: units.gu(4)
                 anchors {bottom: parent.bottom; left: parent.left; right: parent.right }
