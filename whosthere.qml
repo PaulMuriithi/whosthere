@@ -224,9 +224,9 @@ MainView {
                             text: type == "message" ? content : type
                         }
                         Image {
-                            //Seems that the preview images are always 100x75
+                            //Seems that the preview images are always 100x75, 75x100 or 100x100 (for location)
                             width: preview ? (sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8)) : 0
-                            height: preview ? (sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6)) : 0
+                            height: preview ? (sourceSize.height >= sourceSize.width ? units.gu(8) : units.gu(6)) : 0
                             visible: preview
                             source: preview ? "image://drawable/" + msgId : ""
                         }
