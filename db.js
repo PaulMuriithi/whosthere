@@ -40,20 +40,30 @@ function openDB() {
                 db.transaction(
                     function(tx) {
                         tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT)');
-                        tx.executeSql('CREATE TABLE Messages(type TEXT, jid TEXT, msgId TEXT, content TEXT, preview BLOB, url TEXT, size INT, timestamp TIMESTAMP, incoming BOOL, sent BOOL, delivered BOOL, longitude REAL, latitude REAL)');
+                        tx.executeSql("CREATE TABLE Messages(type TEXT NOT NULL, jid TEXT NOT NULL, msgId TEXT UNIQUE NOT NULL, "
+                                     +"content TEXT DEFAULT '', preview BLOB DEFAULT '', url TEXT DEFAULT '', "
+                                     +"size INT DEFAULT 0, timestamp TIMESTAMP DEFAULT 0, incoming INT DEFAULT 0, "
+                                     +"sent INT DEFAULT 0, delivered INT DEFAULT 0, "
+                                     +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0)");
                     });
-                db.changeVersion("","4");
+                db.changeVersion("","5");
             });
-    if(db.version == "")
+    if(db.version == "") //changeVersion did not take effect yet
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
-
-    if(db.version == "") //Artifact from first release
-        console.log("Database broken, please rm -R .local/share/whosthere")
 
     console.log('openDb with version '+ db.version);
 
+    if(db.version == "") { //Artifact from first release
+        console.log("Updating db to version 2");
+        db.changeVersion("","2", function(tx) {
+            tx.executeSql('ALTER TABLE Messages ADD url TEXT');
+            tx.executeSql('ALTER TABLE Messages ADD size INT');
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
     if(db.version == "2") {
-        console.log("Updating db to 3");
+        console.log("Updating db to version 3");
         db.changeVersion("2","3", function(tx) {
             tx.executeSql('ALTER TABLE Messages ADD preview BLOB');
             });
@@ -61,10 +71,28 @@ function openDB() {
         console.log("Now at version " + db.version);
     }
     if(db.version == "3") {
-        console.log("Updating db to 4");
+        console.log("Updating db to version 4");
         db.changeVersion("3","4", function(tx) {
             tx.executeSql('ALTER TABLE Messages ADD longitude REAL');
             tx.executeSql('ALTER TABLE Messages ADD latitude REAL');
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
+    if(db.version == "4") {
+        console.log("Updating db to version 5");
+        db.changeVersion("4","5", function(tx) {
+            tx.executeSql('ALTER TABLE Messages RENAME TO oldMessages');
+            tx.executeSql("CREATE TABLE Messages(type TEXT NOT NULL, jid TEXT NOT NULL, msgId TEXT UNIQUE NOT NULL, "
+                         +"content TEXT DEFAULT '', preview TEXT DEFAULT '', url TEXT DEFAULT '', "
+                         +"size INT DEFAULT 0, timestamp TIMESTAMP DEFAULT 0, incoming INT DEFAULT 0, "
+                         +"sent INT DEFAULT 0, delivered INT DEFAULT 0, "
+                         +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0)");
+            tx.executeSql("INSERT INTO Messages (type, content, jid, msgId, timestamp, incoming, sent, delivered, "
+                         +"preview, size, url, latitude, longitude ) "
+                         +"SELECT type, content, jid, msgId, timestamp, incoming, sent, delivered, "
+                         +"preview, size, url, latitude, longitude FROM oldMessages")
+            tx.executeSql('DROP TABLE oldMessages');
             });
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
         console.log("Now at version " + db.version);
@@ -79,15 +107,9 @@ function loadMessages() {
     allMessages.clear();
     db.transaction(
                 function(tx) {
-                    try {
                         var rs = tx.executeSql('SELECT * FROM Messages');
-                        for(var i=0;i < rs.rows.length; ++i) {
-                            console.log("loaded message " + rs.rows.item(i).jid);
+                        for(var i=0;i < rs.rows.length; ++i)
                             allMessages.append(rs.rows.item(i));
-                        }
-                    } catch(err) {
-                        console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                    }
                 });
     updateMessages();
 }
@@ -97,12 +119,23 @@ function addMessage(msg) {
 
     var db = openDB();
 
+    // 1:1 mapping of keys and values of msg to columns and values in SQL
     db.transaction(
                 function(tx) {
-                    tx.executeSql('INSERT INTO Messages (type, content, jid, msgId, timestamp, incoming, sent, delivered, preview, size, url, latitude, longitude ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                                  [ msg['type'], msg['content'], msg['jid'], msg['msgId'], msg['timestamp'],
-                                  msg['incoming'], msg['sent'], msg['delivered'],
-                                   msg['preview'], msg['size'], msg['url'], msg['latitude'], msg['longitude']]);
+                    var columns = '';
+                    var valuesp = '';
+                    var values = [];
+                    for(var i in msg) {
+                        if(columns.length == 0) {
+                            columns = i;
+                            valuesp = '?';
+                        } else {
+                            columns += ', ' + i;
+                            valuesp += ', ?';
+                        }
+                        values.push(msg[i])
+                    }
+                    tx.executeSql('INSERT INTO Messages (' + columns + ') VALUES(' + valuesp + ')', values);
                 })
 }
 
