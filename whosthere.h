@@ -17,7 +17,7 @@ public:
 public slots:
 
     /* Misc */
-    void login(const QString &username, const QString &password);
+    void login(const QString& username, const QByteArray& password);
     void ready();
     void pong(const QString &pingId);
     void disconnect(const QByteArray& reason);

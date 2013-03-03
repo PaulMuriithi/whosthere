@@ -45,7 +45,7 @@
     </method>
     <method name="auth_login">
       <arg direction="in"  type="s" name="number" />
-      <arg direction="in"  type="s" name="password" />
+      <arg direction="in"  type="ay" name="password" />
     </method>
     <method name="presence_sendAvailableForChat">
     </method>

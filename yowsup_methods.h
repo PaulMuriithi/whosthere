@@ -36,7 +36,7 @@ public:
     ~yowsup_methods();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> auth_login(const QString &number, const QString &password)
+    inline QDBusPendingReply<> auth_login(const QString &number, const QByteArray &password)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(number) << QVariant::fromValue(password);

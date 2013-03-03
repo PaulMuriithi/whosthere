@@ -100,14 +100,14 @@ bool WhosThere::connectDbus() {
     return true;
 }
 
-void WhosThere::login(const QString& username, const QString& password) {
+void WhosThere::login(const QString& username, const QByteArray& password) {
     qDebug() << "YowSup login";
     if(!connectDbus()) {
         emit auth_fail(username, "Could not connect to dbus");
         return;
     }
 
-    QDBusPendingReply<> r = ym->auth_login(username, password);
+    QDBusPendingReply<> r = ym->auth_login(username, QByteArray::fromBase64(password));
     r.waitForFinished();
     if( r.isError() ) {
         emit auth_fail(username, QString("Dbus error on auth_login:") + r.error().message());
