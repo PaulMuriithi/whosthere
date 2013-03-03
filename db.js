@@ -65,7 +65,6 @@ function openDB() {
 function loadMessages() {
     console.log("loadMessages");
     var db = openDB();
-    //db.changeVersion(from, to, callback(tx))
 
     db.transaction(
                 function(tx) {
@@ -161,6 +160,5 @@ function getPreviewImage(id) {
                     }
                 }
                 )
-    console.log("data: " + data)
     return data;
 }
