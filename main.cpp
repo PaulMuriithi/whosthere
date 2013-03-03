@@ -56,8 +56,8 @@ int main(int argc, char ** argv)
     viewer = new QQuickView();
     viewer->engine()->addImportPath(":");
     viewer->engine()->addImageProvider("drawable", new ImageProvider);
+    viewer->setResizeMode( QQuickView::SizeRootObjectToView );
     viewer->setSource(QUrl("qrc:whosthere.qml"));
-    //viewer.setSource(QUrl("qrc:Error.qml"));
     viewer->show();
 
     return app.exec();
