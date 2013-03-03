@@ -34,16 +34,16 @@ function updateMessages() {
 }
 
 function openDB() {
+    //NOTE: changeVersion does not have an effect until database is opened again
     var db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000,
             function(db) {
                 db.transaction(
                     function(tx) {
                         tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT)');
-                        tx.executeSql('CREATE TABLE Messages(type TEXT, jid TEXT, msgId TEXT, content TEXT, preview BLOB, url TEXT, size INT, timestamp TIMESTAMP, incoming BOOL, sent BOOL, delivered BOOL)');
+                        tx.executeSql('CREATE TABLE Messages(type TEXT, jid TEXT, msgId TEXT, content TEXT, preview BLOB, url TEXT, size INT, timestamp TIMESTAMP, incoming BOOL, sent BOOL, delivered BOOL, longitude REAL, latitude REAL)');
                     });
                 db.changeVersion("","3");
             });
-    //After the database has been created fresh, its db.version == "" until we do openDatabaseSync() again
     if(db.version == "")
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
 
@@ -57,6 +57,16 @@ function openDB() {
         db.changeVersion("2","3", function(tx) {
             tx.executeSql('ALTER TABLE Messages ADD preview BLOB');
             });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
+    if(db.version == "3") {
+        console.log("Updating db to 4");
+        db.changeVersion("3","4", function(tx) {
+            tx.executeSql('ALTER TABLE Messages ADD longitude REAL');
+            tx.executeSql('ALTER TABLE Messages ADD latitude REAL');
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
         console.log("Now at version " + db.version);
     }
     return db;
@@ -89,10 +99,10 @@ function addMessage(msg) {
 
     db.transaction(
                 function(tx) {
-                    tx.executeSql('INSERT INTO Messages (type, content, jid, msgId, timestamp, incoming, sent, delivered, preview, size, url ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    tx.executeSql('INSERT INTO Messages (type, content, jid, msgId, timestamp, incoming, sent, delivered, preview, size, url, latitude, longitude ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                                   [ msg['type'], msg['content'], msg['jid'], msg['msgId'], msg['timestamp'],
                                   msg['incoming'], msg['sent'], msg['delivered'],
-                                  msg['preview'], msg['size'], msg['url']]);
+                                   msg['preview'], msg['size'], msg['url'], msg['latitude'], msg['longitude']]);
                 })
 }
 

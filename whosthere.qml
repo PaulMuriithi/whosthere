@@ -216,13 +216,18 @@ MainView {
                         }
                         Image {
                             //Seems that the preview images are always 100x75
-                            width: sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8);
-                            height: sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6);
-                            visible: type == "image" || type == "video"
-                            source: (type == "image" || type == "video") ? "image://drawable/" + msgId : ""
+                            width: preview ? (sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8)) : 0
+                            height: preview ? (sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6)) : 0
+                            visible: preview
+                            source: preview ? "image://drawable/" + msgId : ""
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: Qt.openUrlExternally(url)
+                                onClicked: {
+                                    if(url)
+                                        Qt.openUrlExternally(url)
+                                    else if(type == "location")
+                                        Qt.openUrlExternally("https://maps.google.com/maps?q="+latitude+","+longitude);
+                                }
                             }
                         }
 
@@ -312,7 +317,18 @@ MainView {
                                      "incoming": 1});
             DB.updateMessages();
         }
+        onLocation_received : {
+            //
+            console.log("onLocation_received " + name  + " " + latitude + " " + longitude);
 
+            if(wantsReceipt)
+                message_ack(jid, msgId);
+            DB.addMessage({ "type": "location", "content": name, "preview": preview,
+                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                                     "latitude": latitude, "longitude" : longitude,
+                                     "incoming": 1});
+            DB.updateMessages();
+        }
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             delivered_ack(jid, msgId);
