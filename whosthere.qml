@@ -201,6 +201,8 @@ MainView {
             ListModel {
                 id: conversationMessages
             }
+
+            /* List view showing the messages */
             ListView {
                 anchors {top: back_btn.bottom; left: parent.left; right: parent.right; bottom: newMessage_inpt.top }
                 model: conversationMessages
@@ -210,15 +212,14 @@ MainView {
                     Column {
                         x: incoming ? parent.width/2 : 0
                         Label { //Text
-                            visible: type == "message"
-                            text: content
+                            text: type == "message" ? content : type
                         }
                         Image {
                             //Seems that the preview images are always 100x75
                             width: sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8);
                             height: sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6);
-                            visible: type == "image"
-                            source: type == "image" ? "image://drawable/" + msgId : ""
+                            visible: type == "image" || type == "video"
+                            source: (type == "image" || type == "video") ? "image://drawable/" + msgId : ""
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: Qt.openUrlExternally(url)
@@ -290,7 +291,7 @@ MainView {
             DB.updateMessages();
         }
         onImage_received: {
-            console.log("onImage_received " + preview + " " + url + " " + size);
+            console.log("onImage_received " + url + " " + size);
 
             if(wantsReceipt)
                 message_ack(jid, msgId);
@@ -298,6 +299,17 @@ MainView {
                                      "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
                                      "size": size, "url" : url,
                                      "incoming": 1, "sent": 0, "delivered": 0});
+            DB.updateMessages();
+        }
+        onVideo_received : {
+            console.log("onImage_received " + url + " " + size);
+
+            if(wantsReceipt)
+                message_ack(jid, msgId);
+            DB.addMessage({ "type": "video", "preview": preview,
+                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                                     "size": size, "url" : url,
+                                     "incoming": 1});
             DB.updateMessages();
         }
 

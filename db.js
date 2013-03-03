@@ -173,7 +173,7 @@ function getPreviewImage(id) {
     var data;
     db.readTransaction(
                 function(tx) {
-                    var rs = tx.executeSql('SELECT preview FROM Messages WHERE msgId = ? AND type ="image"', id);
+                    var rs = tx.executeSql('SELECT preview FROM Messages WHERE msgId = ?', id);
                     if(rs.rows.length == 0) {
                         console.log('No preview image found for id ' + id);
                     } else {
