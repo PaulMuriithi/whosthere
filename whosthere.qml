@@ -205,10 +205,11 @@ MainView {
             /* List view showing the messages */
             ListView {
                 anchors {top: back_btn.bottom; left: parent.left; right: parent.right; bottom: newMessage_inpt.top }
+                anchors.margins: units.gu(1)
                 model: conversationMessages
-                delegate: ListItem.Subtitled {
-                    //anchors {left: parent.left; right: parent.right }
-                    //width: parent.width/2
+                delegate: Item {
+                    anchors { left: parent.left; right: parent.right }
+                    height: units.gu(8)
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
@@ -218,23 +219,52 @@ MainView {
                                 Qt.openUrlExternally("https://maps.google.com/maps?q="+latitude+","+longitude);
                         }
                     }
-                    Column {
-                        x: incoming ? parent.width/2 : 0
-                        Label { //Text
-                            text: type == "message" ? content : type
+                    /* This state right aligns and flips order of contents */
+                    states: State {
+                             name: "incoming"
+                             AnchorChanges {
+                                 target: preview_img
+                                 anchors.right: parent.right
+                                 anchors.left: undefined
+                             }
+                             AnchorChanges {
+                                 target: txtclm
+                                 anchors.right: preview_img.left
+                                 anchors.left: undefined
+                             }
+                             AnchorChanges {
+                                 target: content_itm
+                                 anchors.left: undefined
+                                 anchors.right: parent.right
+                             }
+                    }
+                    state: incoming ? "incoming" : "";
+                    Item {
+                        id: content_itm
+                        anchors.left: parent.left
+                        width: txtclm.width + preview_img.width
+                        Column {
+                            id: txtclm
+                            anchors.left: preview_img.right
+                            Label { //Text
+                                text: type == "message" ? content : type
+                            }
+                            Label { //Status
+                                text: (timestamp ? (new Date(timestamp*1000) + " ") : "" )
+                                      +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
+                                font.italic: true
+                                font.pointSize: 6
+                            }
                         }
                         Image {
+                            id: preview_img
+                            anchors.margins: units.gu(1)
+                            anchors.left: parent.left
                             //Seems that the preview images are always 100x75, 75x100 or 100x100 (for location)
-                            width: preview ? (sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8)) : 0
-                            height: preview ? (sourceSize.height >= sourceSize.width ? units.gu(8) : units.gu(6)) : 0
+                            width: preview ? (sourceSize.height > sourceSize.width ? units.gu(3) : units.gu(4)) : 0
+                            height: preview ? (sourceSize.height >= sourceSize.width ? units.gu(4) : units.gu(3)) : 0
                             visible: preview
                             source: preview ? "image://drawable/" + msgId : ""
-                        }
-                        Label { //Status
-                            text: (timestamp ? (new Date(timestamp*1000) + " ") : "" )
-                                  +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
-                            font.italic: true
-                            font.pointSize: 6
                         }
                     }
                 }
@@ -243,7 +273,7 @@ MainView {
                 id: newMessage_inpt
                 placeholderText: "Type message"
                 //color: "white"
-                width: parent.width; height: units.gu(4)
+                height: units.gu(4)
                 anchors {bottom: parent.bottom; left: parent.left; right: parent.right }
                 onAccepted: {
                     if( text === "" )
