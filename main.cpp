@@ -45,18 +45,20 @@
 #include "whosthere.h"
 #include "imageprovider.h"
 
+QQuickView* viewer;
+
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
     qmlRegisterType<WhosThere>("WhosThere", 1,0, "WhosThere");
 
-    QQuickView viewer;
-    viewer.engine()->addImportPath(":");
-    viewer.engine()->addImageProvider("drawable", new ImageProvider);
-    viewer.setSource(QUrl("qrc:whosthere.qml"));
+    viewer = new QQuickView();
+    viewer->engine()->addImportPath(":");
+    viewer->engine()->addImageProvider("drawable", new ImageProvider);
+    viewer->setSource(QUrl("qrc:whosthere.qml"));
     //viewer.setSource(QUrl("qrc:Error.qml"));
-    viewer.show();
+    viewer->show();
 
     return app.exec();
 }
