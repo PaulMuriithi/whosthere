@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_METHODS_H_1362265086
-#define YOWSUP_METHODS_H_1362265086
+#ifndef YOWSUP_METHODS_H_1362277271
+#define YOWSUP_METHODS_H_1362277271
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

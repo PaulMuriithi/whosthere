@@ -253,7 +253,7 @@
     <signal name="image_received">
       <arg type="s" name="msgId" />
       <arg type="s" name="jid" />
-      <arg type="ay" name="preview" />
+      <arg type="s" name="preview" />
       <arg type="s" name="url" />
       <arg type="i" name="size" />
       <arg type="b" name="wantsReceipt" />

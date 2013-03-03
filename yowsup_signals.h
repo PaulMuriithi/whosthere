@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef YOWSUP_SIGNALS_H_1362265086
-#define YOWSUP_SIGNALS_H_1362265086
+#ifndef YOWSUP_SIGNALS_H_1362277271
+#define YOWSUP_SIGNALS_H_1362277271
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -72,7 +72,7 @@ Q_SIGNALS: // SIGNALS
     void group_subjectReceived(const QString &msgId, const QString &fromAttribute, const QString &author, const QString &newSubject, const QString &timestamp, const QString &receiptRequested);
     void group_vcardReceived(const QString &msgId, const QString &jid, const QString &author, const QString &name, const QString &data, bool wantsReceipt);
     void group_videoReceived(const QString &msgId, const QString &jid, const QString &author, const QString &preview, const QString &url, int size, bool wantsReceipt);
-    void image_received(const QString &msgId, const QString &jid, const QByteArray &preview, const QString &url, int size, bool wantsReceipt);
+    void image_received(const QString &msgId, const QString &jid, const QString &preview, const QString &url, int size, bool wantsReceipt);
     void location_received(const QString &msgId, const QString &jid, const QString &name, const QString &preview, double latitude, double longitude, bool wantsReceipt);
     void message_error(const QString &msgId, const QString &jid, const QString &errorCode);
     void message_received(const QString &msgId, const QString &jid, const QString &content, int timestamp, bool wantsReceipt, const QString &pushName);
