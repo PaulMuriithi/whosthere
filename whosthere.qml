@@ -33,27 +33,32 @@ MainView {
             Column {
                 anchors.fill: parent
                 Label {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Login")
                     font.underline: true
                     font.italic: true
                 }
                 Label {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Login with your mobile number (including country code, excluding leading + or 00) and password. To obtain a password, see section 'Register' below.")
                     wrapMode: Text.WordWrap
                     anchors { left: parent.left; right: parent.right }
                 }
                 TextField {
+                    anchors.margins: units.gu(1)
                     id: username_txt
                     placeholderText: i18n.tr("Telephone number without leading + or 00")
                     width: parent.width; height: units.gu(4)
                 }
                 TextField {
+                    anchors.margins: units.gu(1)
                     id: password_txt
                     placeholderText: i18n.tr("Password")
                     width: parent.width; height: units.gu(4)
                 }
                 Row {
                     Button {
+                        anchors.margins: units.gu(1)
                         id: login_btn
                         text: i18n.tr("Log in")
                         onClicked: {
@@ -65,6 +70,7 @@ MainView {
                         }
                     }
                     Button {
+                        anchors.margins: units.gu(1)
                         text: i18n.tr("Demo")
                         onClicked: {
                             allMessages.append({ "type": "message", "content": "Hi there",
@@ -92,11 +98,13 @@ MainView {
                     }
                 }
                 Label {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Register")
                     font.italic: true
                     font.underline: true
                 }
                 Label {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Registration is a two step process: First, enter your country code (e.g. '1' for US) "
                                   +"and telephone number below (without country code and without leading 0), "
                                   +"then tap 'Request code'. A code will be send via text to your number. "
@@ -106,6 +114,7 @@ MainView {
                     anchors { left: parent.left; right: parent.right }
                 }
                 Row {
+                    anchors.margins: units.gu(1)
                     TextField {
                         id: countrycode_txt
                         placeholderText: i18n.tr("cc")
@@ -118,6 +127,7 @@ MainView {
                     }
                 }
                 Button {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Request code")
                     width: units.gu(18)
                     onClicked: {
@@ -130,11 +140,13 @@ MainView {
                     }
                 }
                 TextField {
+                    anchors.margins: units.gu(1)
                     id: code_txt
                     placeholderText: i18n.tr("Code you got via text")
                     //height: 28
                 }
                 Button {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("Request password")
                     width: units.gu(22)
                     onClicked: {
@@ -149,10 +161,12 @@ MainView {
                     }
                 }
                 Label {
+                    anchors.margins: units.gu(1)
                     id: uid_txt
                 }
 
                 Label {
+                    anchors.margins: units.gu(1)
                     text: i18n.tr("By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>");
                     onLinkActivated: Qt.openUrlExternally(link)
                     wrapMode: Text.WordWrap
