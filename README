@@ -1,1 +1,10 @@
-Install libqt5sql5-sqlite and qtdeclarative5-localstorage-plugin
+WhosThere - A WhatsApp client for Ubuntu (Touch)
+
+= Build =
+qmake && make && make install
+
+= Run =
+On the desktop:
+  whosthere
+On the phone:
+  whosthere --desktop_file_hint /usr/share/applications/whosthere.desktop
