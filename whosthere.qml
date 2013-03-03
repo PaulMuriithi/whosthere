@@ -12,16 +12,44 @@ MainView {
     //anchors.centerIn: parent
     //anchors.fill: parent
     //color: "lightgray"
+    Component.onCompleted: {
+        DB.updateMessages();
+    }
+    Component.onDestruction: {
+        whosthere.disconnect("");
+    }
 
     PageStack {
         id: pagestack
         anchors.fill: parent
-        Component.onCompleted: {
-            DB.updateMessages();
-            push(page_login)
-        }
-        Component.onDestruction: {
-            whosthere.disconnect("");
+
+        Page {
+            id: page_loading
+            visible: false
+            anchors.fill: parent
+            title: i18n.tr("Connecting...")
+            ActivityIndicator {
+                id: activity_ind
+                anchors { verticalCenter: parent.verticalCenter; horizontalCenter: parent.horizontalCenter}
+                running: true
+            }
+            Label {
+                text: i18n.tr("Connecting ...")
+                anchors { horizontalCenter: parent.horizontalCenter; bottom: activity_ind.top; margins: units.gu(4) }
+            }
+            Component.onCompleted: {
+                var valid = DB.getCredentialsValid();
+                var username = DB.getUsername();
+                var password = DB.getPassword();
+
+                if(valid && username && password) {
+                    console.log("Autologin with username " + username + " and password " + password);
+                    pagestack.push(page_loading);
+                    whosthere.login(username, password);
+                } else {
+                    pagestack.push(page_login);
+                }
+            }
         }
 
         Page {
@@ -66,7 +94,8 @@ MainView {
                                 return;
 
                             whosthere.login(username_txt.text, password_txt.text);
-                            DB.saveCredentials(username_txt.text, password_txt.text, uid_txt.text);
+                            DB.setUsername(username_txt.text);
+                            DB.setPassword(password_txt.text);
                         }
                     }
                     Button {
@@ -135,8 +164,9 @@ MainView {
                             return;
                         console.log("onClicked: call code_request");
                         whosthere.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
+                        DB.setUsername(countrycode_txt.text+username_reg_txt.text);
                         //requesting the code invalidates the old password
-                        DB.saveCredentials(countrycode_txt.text+username_reg_txt.text, "", uid_txt.text);
+                        DB.setPassword('');
                     }
                 }
                 TextField {
@@ -179,6 +209,11 @@ MainView {
             visible: false
             title: i18n.tr("Contacts")
             anchors.fill: parent
+            Label {
+                visible: contactsModel.count == 0
+                text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
+            }
+
             ListModel {
                 id: contactsModel
             }
@@ -316,12 +351,19 @@ MainView {
         onAuth_success: {
             console.log("auth success for " + username);
             ready();
+            DB.setCredentialsValid(true);
             DB.loadMessages();
             pagestack.push(page_contacts);
         }
         onAuth_fail: {
             //PopupUtils.open(errorPopover, whosthere);
             console.log("auth fail for " + username + ", reason: " + reason);
+            if(reason == "invalid") {
+                DB.setCredentialsValid(false);
+                pagestack.push(page_login);
+            } else {
+                console.log("onAuth_fail: Unhandled reason: " + reason)
+            }
         }
         onMessage_error: {
             console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
@@ -425,7 +467,7 @@ MainView {
         onCode_register_response: {
             console.log("onCode_register_response: " + status + " " + reason);
             if(status == 'ok') {
-                DB.saveCredentials(countrycode_txt.text+username_reg_txt.text, pw, uid_txt.text);
+                DB.setPassword(pw);
                 password_txt.text = pw;
                 username_txt.text = countrycode_txt.text+username_reg_txt.text;
             } else {

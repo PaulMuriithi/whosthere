@@ -1,3 +1,5 @@
+var db = openDB();
+
 function showConversation(jid) {
     page_conversation.jid = jid;
     updateMessages();
@@ -39,14 +41,15 @@ function openDB() {
             function(db) {
                 db.transaction(
                     function(tx) {
-                        tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT)');
+                        tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT, valid INT)');
+                        tx.executeSql("INSERT INTO Credentials (username, password, uid, valid) VALUES('','','',0)");
                         tx.executeSql("CREATE TABLE Messages(type TEXT NOT NULL, jid TEXT NOT NULL, msgId TEXT UNIQUE NOT NULL, "
                                      +"content TEXT DEFAULT '', preview BLOB DEFAULT '', url TEXT DEFAULT '', "
                                      +"size INT DEFAULT 0, timestamp TIMESTAMP DEFAULT 0, incoming INT DEFAULT 0, "
                                      +"sent INT DEFAULT 0, delivered INT DEFAULT 0, "
                                      +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0)");
                     });
-                db.changeVersion("","5");
+                db.changeVersion("","6");
             });
     if(db.version == "") //changeVersion did not take effect yet
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
@@ -97,12 +100,22 @@ function openDB() {
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
         console.log("Now at version " + db.version);
     }
+    if(db.version == "5") {
+        console.log("Updating db to version 6");
+        db.changeVersion("5","6", function(tx) {
+            tx.executeSql('ALTER TABLE Credentials ADD valid INT');
+            var rs = tx.executeSql('SELECT * FROM Credentials');
+            if(rs.rows.length == 0)
+                tx.executeSql("INSERT INTO Credentials (username, password, uid, valid) VALUES('','','',0)");
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
     return db;
 }
 
 function loadMessages() {
     console.log("loadMessages");
-    var db = openDB();
 
     allMessages.clear();
     db.transaction(
@@ -116,8 +129,6 @@ function loadMessages() {
 
 function addMessage(msg) {
     allMessages.append(msg);
-
-    var db = openDB();
 
     // 1:1 mapping of keys and values of msg to columns and values in SQL
     db.transaction(
@@ -141,8 +152,6 @@ function addMessage(msg) {
 
 //Sets the delivered column to true
 function setDelivered(jid,msgId) {
-    var db = openDB();
-
     db.transaction(
                 function(tx) {
                     tx.executeSql('UPDATE Messages SET "delivered"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
@@ -151,8 +160,6 @@ function setDelivered(jid,msgId) {
 
 //Sets the sent column to true
 function setSent(jid,msgId) {
-    var db = openDB();
-
     db.transaction(
                 function(tx) {
                     tx.executeSql('UPDATE Messages SET "sent"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
@@ -172,7 +179,6 @@ function createUID() {
 
 function fillCredentials() {
     console.log("fillCredentials");
-    var db = openDB()
 
     db.transaction(
                 function(tx) {
@@ -187,28 +193,104 @@ function fillCredentials() {
                             if(rs.rows.item(0).uid && rs.rows.item(0).uid.length == 32)
                                 uid_txt.text = rs.rows.item(0).uid;
                         }
-                    if(uid_txt.text.length != 32)
-                        uid_txt.text = createUID();
+                }
+                );
+    if(uid_txt.text.length != 32) {
+        uid_txt.text = createUID();
+        setUID(uid_txt.text);
+    }
+}
+
+function getUsername() {
+    var username;
+    db.readTransaction(
+                function(tx) {
+                    var rs = tx.executeSql('SELECT username FROM Credentials');
+                    if(rs.rows.length == 0) {
+                        console.log('No username found!');
+                    } else {
+                        username = rs.rows.item(0).username;
+                    }
+                }
+                )
+    return username;
+}
+
+function getPassword() {
+    var password;
+    db.readTransaction(
+                function(tx) {
+                    var rs = tx.executeSql('SELECT password FROM Credentials');
+                    if(rs.rows.length == 0) {
+                        console.log('No password found!');
+                    } else {
+                        password = rs.rows.item(0).password;
+                    }
+                }
+                )
+    return password;
+}
+
+function getCredentialsValid() {
+    var valid;
+    db.readTransaction(
+                function(tx) {
+                    var rs = tx.executeSql('SELECT valid FROM Credentials');
+                    if(rs.rows.length == 0) {
+                        console.log('No valid found!');
+                    } else {
+                        valid = rs.rows.item(0).valid;
+                    }
+                }
+                )
+    console.log("valid " + valid);
+    return valid;
+}
+
+function setCredentialsValid(isValid) {
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('UPDATE Credentials SET valid=?',
+                                  [ isValid ]);
                 }
                 );
 }
 
-function saveCredentials(username, password, uid) {
-    console.log("saveCredentials");
-    var db = openDB();
+function setUsername(username) {
+    console.log("setUsername");
 
     db.transaction(
                 function(tx) {
-                    tx.executeSql('DELETE FROM Credentials');
-                    tx.executeSql('INSERT INTO Credentials (username, password, uid) VALUES(?, ?, ?)',
-                                  [ username, password, uid ]);
+                    tx.executeSql('UPDATE Credentials SET username=?',
+                                  [ username ]);
                 }
-                )
+                );
+}
+
+function setPassword(password) {
+    console.log("setPassword");
+
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('UPDATE Credentials SET password=?',
+                                  [ password ]);
+                }
+                );
+}
+
+function setUID(uid) {
+    console.log("setUID");
+
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('UPDATE Credentials SET uid=?',
+                                  [ uid ]);
+                }
+                );
 }
 
 function getPreviewImage(id) {
-    console.log("saveCredentials");
-    var db = openDB();
+    console.log("getPreviewImage");
 
     var data;
     db.readTransaction(
