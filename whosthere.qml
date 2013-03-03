@@ -284,6 +284,12 @@ MainView {
         }
         onAudio_received: {
             console.log("onAudio_received");
+            if(wantsReceipt)
+                message_ack(jid, msgId);
+            DB.addMessage({ "type": "audio", "url": url,
+                              "jid": jid, "msgId": msgId, "size":  size,
+                              "incoming": 1});
+            DB.updateMessages();
         }
         onMessage_received: {
             console.log("OnMessage_received: " + msgId + " " + jid + " " + content + " " + timestamp + " " + wantsReceipt);
