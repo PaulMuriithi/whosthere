@@ -69,23 +69,23 @@ MainView {
                         onClicked: {
                             allMessages.append({ "type": "message", "content": "Hi there",
                                                    "jid": "155556778317@s.whatsapp.net", "msgId": "1", "timestamp": 0,
-                                                   "incoming": true, "sent": false, "delivered": false});
+                                                   "incoming": 1, "sent": 0, "delivered": 0});
                             allMessages.append({ "type": "message", "content": "How are you doing?",
                                                    "jid": "155556778317@s.whatsapp.net", "msgId": "2", "timestamp": 2,
-                                                   "incoming": false, "sent": true, "delivered": true});
+                                                   "incoming": 1, "sent": 0, "delivered": 0});
                             allMessages.append({ "type": "message", "content": "Everything alright?",
                                                    "jid": "155556778317@s.whatsapp.net", "msgId": "3", "timestamp": 17,
-                                                   "incoming": false, "sent": true, "delivered": false});
+                                                   "incoming": 0, "sent": 1, "delivered": 0});
 
                             allMessages.append({ "type": "message", "content": "Hello!",
                                                    "jid": "155556777777@s.whatsapp.net", "msgId": "1", "timestamp": 0,
-                                                   "incoming": true, "sent": false, "delivered": false});
+                                                   "incoming": 1, "sent": 0, "delivered": 0});
                             allMessages.append({ "type": "message", "content": "I'm sending a text",
                                                    "jid": "155556777777@s.whatsapp.net", "msgId": "2", "timestamp": 2,
-                                                   "incoming": true, "sent": false, "delivered": false});
+                                                   "incoming": 1, "sent": 0, "delivered": 0});
                             allMessages.append({ "type": "message", "content": ".. and I'm answering",
                                                    "jid": "155556777777@s.whatsapp.net", "msgId": "3", "timestamp": 17,
-                                                   "incoming": false, "sent": false, "delivered": false});
+                                                   "incoming": 0, "sent": 0, "delivered": 0});
                             DB.updateMessages();
                             pagestack.push(page_contacts);
                         }
@@ -248,7 +248,7 @@ MainView {
 
                     DB.addMessage({ "type": "message", "content": text,
                                              "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
-                                             "incoming": false, "sent": false, "delivered": false});
+                                             "incoming": 0, "sent": 0, "delivered": 0});
                     text = "";
                 }
             }
@@ -286,7 +286,7 @@ MainView {
                 message_ack(jid, msgId);
             DB.addMessage({ "type": "message", "content": content,
                                      "jid": jid, "msgId": msgId, "timestamp":  timestamp,
-                                     "incoming": true, "sent": false, "delivered": false});
+                                     "incoming": 1, "sent": 0, "delivered": 0});
             DB.updateMessages();
         }
         onImage_received: {
@@ -297,7 +297,7 @@ MainView {
             DB.addMessage({ "type": "image", "preview": preview,
                                      "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
                                      "size": size, "url" : url,
-                                     "incoming": true, "sent": false, "delivered": false});
+                                     "incoming": 1, "sent": 0, "delivered": 0});
             DB.updateMessages();
         }
 
