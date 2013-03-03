@@ -2,17 +2,9 @@
 #include "yowsup_main.h"
 #include "whosthere.h"
 
-static WhosThere* instance = NULL;
-
-WhosThere* WhosThere::get() {
-    return instance;
-}
-
 WhosThere::WhosThere(QQuickItem *parent) :
     QQuickItem(parent), ys(0), ym(0)
 {
-    Q_ASSERT(instance == NULL);
-    instance = this;
 }
 
 void WhosThere::ready() {

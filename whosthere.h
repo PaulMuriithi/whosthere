@@ -14,7 +14,6 @@ public:
     yowsup_methods* ym;
 
     bool connectDbus();
-    static WhosThere* get();
 public slots:
 
     /* Misc */
@@ -73,7 +72,6 @@ public slots:
     void delivered_ack(const QString &jid, const QString &msgId);
 
 signals:
-    QByteArray getPreviewImage(const QString& id);
     /* Keep in sync with yowsup_signals.h */
     void audio_received(const QString &msgId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);
