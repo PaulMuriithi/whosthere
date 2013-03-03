@@ -42,7 +42,7 @@ function openDB() {
                         tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT)');
                         tx.executeSql('CREATE TABLE Messages(type TEXT, jid TEXT, msgId TEXT, content TEXT, preview BLOB, url TEXT, size INT, timestamp TIMESTAMP, incoming BOOL, sent BOOL, delivered BOOL, longitude REAL, latitude REAL)');
                     });
-                db.changeVersion("","3");
+                db.changeVersion("","4");
             });
     if(db.version == "")
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
