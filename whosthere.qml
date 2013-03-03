@@ -215,8 +215,8 @@ MainView {
                         }
                         Image {
                             //Seems that the preview images are always 100x75
-                            width: units.gu(8)
-                            height: units.gu(6)
+                            width: sourceSize.height > sourceSize.width ? units.gu(6) : units.gu(8);
+                            height: sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6);
                             visible: type == "image"
                             source: type == "image" ? "image://drawable/" + msgId : ""
                             MouseArea {
