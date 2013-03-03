@@ -176,7 +176,6 @@ function fillCredentials() {
 
     db.transaction(
                 function(tx) {
-                    try {
                         var rs = tx.executeSql('SELECT * FROM Credentials');
 
                         if(rs.rows.length > 1)
@@ -188,13 +187,10 @@ function fillCredentials() {
                             if(rs.rows.item(0).uid && rs.rows.item(0).uid.length == 32)
                                 uid_txt.text = rs.rows.item(0).uid;
                         }
-                    } catch(err) {
-                        console.log("Could not open database. Maybe this is the first run? Error: " + err);
-                    }
                     if(uid_txt.text.length != 32)
                         uid_txt.text = createUID();
                 }
-                )
+                );
 }
 
 function saveCredentials(username, password, uid) {
@@ -204,7 +200,8 @@ function saveCredentials(username, password, uid) {
     db.transaction(
                 function(tx) {
                     tx.executeSql('DELETE FROM Credentials');
-                    tx.executeSql('INSERT INTO Credentials (username, password, uid) VALUES(?, ?, ?)', [ username, password, uid ]);
+                    tx.executeSql('INSERT INTO Credentials (username, password, uid) VALUES(?, ?, ?)',
+                                  [ username, password, uid ]);
                 }
                 )
 }

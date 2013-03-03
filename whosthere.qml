@@ -253,8 +253,8 @@ MainView {
                     console.log("Sent message has id " + msgId);
 
                     DB.addMessage({ "type": "message", "content": text,
-                                             "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
-                                             "incoming": 0, "sent": 0, "delivered": 0});
+                                      "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
+                                      "incoming": 0, "sent": 0, "delivered": 0});
                     text = "";
                 }
             }
@@ -291,8 +291,8 @@ MainView {
             if(wantsReceipt)
                 message_ack(jid, msgId);
             DB.addMessage({ "type": "message", "content": content,
-                                     "jid": jid, "msgId": msgId, "timestamp":  timestamp,
-                                     "incoming": 1, "sent": 0, "delivered": 0});
+                              "jid": jid, "msgId": msgId, "timestamp":  timestamp,
+                              "incoming": 1});
             DB.updateMessages();
         }
         onImage_received: {
@@ -301,9 +301,9 @@ MainView {
             if(wantsReceipt)
                 message_ack(jid, msgId);
             DB.addMessage({ "type": "image", "preview": preview,
-                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                                     "size": size, "url" : url,
-                                     "incoming": 1, "sent": 0, "delivered": 0});
+                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                              "size": size, "url" : url,
+                              "incoming": 1});
             DB.updateMessages();
         }
         onVideo_received : {
@@ -312,9 +312,9 @@ MainView {
             if(wantsReceipt)
                 message_ack(jid, msgId);
             DB.addMessage({ "type": "video", "preview": preview,
-                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                                     "size": size, "url" : url,
-                                     "incoming": 1});
+                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                              "size": size, "url" : url,
+                              "incoming": 1});
             DB.updateMessages();
         }
         onLocation_received : {
@@ -324,9 +324,9 @@ MainView {
             if(wantsReceipt)
                 message_ack(jid, msgId);
             DB.addMessage({ "type": "location", "content": name, "preview": preview,
-                                     "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                                     "latitude": latitude, "longitude" : longitude,
-                                     "incoming": 1});
+                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
+                              "latitude": latitude, "longitude" : longitude,
+                              "incoming": 1});
             DB.updateMessages();
         }
         onReceipt_messageDelivered: {
