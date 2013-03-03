@@ -209,6 +209,15 @@ MainView {
                 delegate: ListItem.Subtitled {
                     //anchors {left: parent.left; right: parent.right }
                     //width: parent.width/2
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            if(url)
+                                Qt.openUrlExternally(url)
+                            else if(type == "location")
+                                Qt.openUrlExternally("https://maps.google.com/maps?q="+latitude+","+longitude);
+                        }
+                    }
                     Column {
                         x: incoming ? parent.width/2 : 0
                         Label { //Text
@@ -220,20 +229,10 @@ MainView {
                             height: preview ? (sourceSize.height > sourceSize.width ? units.gu(8) : units.gu(6)) : 0
                             visible: preview
                             source: preview ? "image://drawable/" + msgId : ""
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    if(url)
-                                        Qt.openUrlExternally(url)
-                                    else if(type == "location")
-                                        Qt.openUrlExternally("https://maps.google.com/maps?q="+latitude+","+longitude);
-                                }
-                            }
                         }
-
                         Label { //Status
                             text: (timestamp ? (new Date(timestamp*1000) + " ") : "" )
-                                               +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
+                                  +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
                             font.italic: true
                             font.pointSize: 6
                         }
