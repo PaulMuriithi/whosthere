@@ -368,7 +368,6 @@ MainView {
         }
         onDbus_fail: {
             Util.log("onDbus_fail " + reason);
-            Qt.quit();
         }
         onDbus_connected: {
             Util.log("onDbus_connected");
@@ -441,6 +440,7 @@ MainView {
             DB.addMessage({ "type": "message", "content": message,
                               "jid": jid, "msgId": msgId, "timestamp": 0,
                               "incoming": 0, "sent": 0, "delivered": 0});
+            DB.updateMessages();
         }
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
