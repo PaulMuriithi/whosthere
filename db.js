@@ -18,21 +18,17 @@ function updateMessages() {
     console.log("updateMessages");
     conversationMessages.clear();
 
-    var contacts = new Array();
+    var contacts = [];
     var i;
     for(i=0;i<allMessages.count;++i) {
         if(allMessages.get(i).jid === page_conversation.jid)
             conversationMessages.append(allMessages.get(i));
-        console.log('Processing '+ allMessages.get(i).jid);
         contacts[allMessages.get(i).jid] = allMessages.get(i);
     }
 
     contactsModel.clear();
-    for(i in contacts) {
-        console.log("Append to contact: " + i);
+    for(i in contacts)
         contactsModel.append(contacts[i]);
-    }
-
 }
 
 function openDB() {
