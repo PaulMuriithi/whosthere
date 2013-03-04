@@ -206,8 +206,8 @@ MainView {
                 State {
                     name: "connected"
                     PropertyChanges {
-                        target: page_contacts
-                        title: i18n.tr("Contacts (connected)")
+                        target: online_status_lbl
+                        text: i18n.tr("connected")
                     }
                     StateChangeScript {
                         script: { Util.log("State changed to connected") }
@@ -216,8 +216,8 @@ MainView {
                 State {
                     name: "disconnected"
                     PropertyChanges {
-                        target: page_contacts
-                        title: i18n.tr("Contacts (disconnected)")
+                        target: online_status_lbl
+                        text: i18n.tr("disconnected")
                     }
                     StateChangeScript {
                         script: { Util.log("State changed to disconnected") }
@@ -226,7 +226,11 @@ MainView {
             ]
             state: "disconnected"
             Label {
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(4) }
+                id: online_status_lbl
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(2) }
+            }
+            Label {
+                anchors { left: parent.left; right: parent.right; top: online_status_lbl.bottom; margins: units.gu(4) }
                 visible: contactsModel.count == 0
                 text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
                 wrapMode: Text.WordWrap
@@ -235,7 +239,7 @@ MainView {
                 id: contactsModel
             }
             ListView {
-                anchors.fill: parent
+                anchors { left: parent.left; right: parent.right; top: online_status_lbl.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
                     text: jid + " ( time: " + timestamp + " )"
