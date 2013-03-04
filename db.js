@@ -117,8 +117,25 @@ function loadMessages() {
     db.transaction(
                 function(tx) {
                         var rs = tx.executeSql('SELECT * FROM Messages');
+                        //We cannot just do allMessages.append(rs.rows.item(i)), because
+                        //sqlite does not keep our dataytypes
                         for(var i=0;i < rs.rows.length; ++i)
-                            allMessages.append(rs.rows.item(i));
+
+                            allMessages.append({   "type":      '' + rs.rows.item(i).type,
+                                                   "jid":       '' + rs.rows.item(i).jid,
+                                                   "msgId":     '' + rs.rows.item(i).msgId,
+                                                   "content":   '' + rs.rows.item(i).content,
+                                                   "preview":   '' + rs.rows.item(i).preview,
+                                                   "url":       '' + rs.rows.item(i).url,
+                                                   "size":      + rs.rows.item(i).size,
+                                                   "timestamp": + rs.rows.item(i).timestamp,
+                                                   "incoming":  !! rs.rows.item(i).incoming,
+                                                   "sent":      !! rs.rows.item(i).sent,
+                                                   "delivered": !! rs.rows.item(i).delivered,
+                                                   "longitude": + rs.rows.item(i).longitude,
+                                                   "latitude":  + rs.rows.item(i).latitude
+                                                   });
+
                 });
     updateMessages();
 }
