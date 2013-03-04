@@ -369,6 +369,8 @@ MainView {
             Util.log("onAuth_success " + username);
             ready();
             DB.setCredentialsValid(true);
+            if(pagestack.currentPage == page_login)
+                pagestack.push(page_contacts);
             page_contacts.state = "connected";
         }
         onAuth_fail: {
