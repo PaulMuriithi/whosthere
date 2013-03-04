@@ -1,6 +1,7 @@
 #ifndef YOWSUP_H
 #define YOWSUP_H
 
+#include <functional>
 #include <QQuickItem>
 #include "yowsup_signals.h"
 #include "yowsup_methods.h"
@@ -10,12 +11,18 @@ class WhosThere : public QQuickItem
     Q_OBJECT
 public:
     explicit WhosThere(QQuickItem *parent = 0);
+    ~WhosThere();
+private:
+    template<typename R, typename... T, typename... T2>
+    void callDbusMethod_Callback(QDBusPendingReply<R> (yowsup_methods::*f)(T...), std::function<void(const R&)> callback,
+                                 T2&&... parameter);
+    template<typename... T, typename... T2>
+    void callDbusMethod(QDBusPendingReply<> (yowsup_methods::*f)(T...), T2&&... parameter);
+
     yowsup_signals* ys;
     yowsup_methods* ym;
-
-    bool connectDbus();
 public slots:
-
+    void connectDBus();
     /* Misc */
     void login(const QString& username, const QByteArray& password);
     void ready();
@@ -50,7 +57,7 @@ public slots:
     /* Message */
     //void message_videoSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size, const QDBusVariant &preview);
     //void message_vcardSend(const QDBusVariant &jid, const QDBusVariant &data, const QDBusVariant &name);
-    QString message_send(const QString &jid, const QByteArray &message);
+    void message_send(QString jid, QByteArray message);
     //void message_locationSend(const QDBusVariant &jid, const QDBusVariant &latitude, const QDBusVariant &longitude, const QDBusVariant &preview);
     //void message_imageSend(const QString &jid, const QString &url, const QString &name, int size, const QString &preview);
     //void message_audioSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size);
@@ -72,6 +79,9 @@ public slots:
     void delivered_ack(const QString &jid, const QString &msgId);
 
 signals:
+    void dbus_fail(const QString& reason);
+    void dbus_connected();
+    void message_send_completed(const QString &jid, const QString &message, const QString& msgId);
     /* Keep in sync with yowsup_signals.h */
     void audio_received(const QString &msgId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);

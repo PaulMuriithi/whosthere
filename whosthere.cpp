@@ -2,9 +2,16 @@
 #include "yowsup_main.h"
 #include "whosthere.h"
 
+using namespace std;
+
 WhosThere::WhosThere(QQuickItem *parent) :
     QQuickItem(parent), ys(0), ym(0)
 {
+}
+
+WhosThere::~WhosThere() {
+    delete ys;
+    delete ym;
 }
 
 void WhosThere::ready() {
@@ -16,11 +23,13 @@ void WhosThere::ready() {
     }
 }
 
-bool WhosThere::connectDbus() {
-    if(ym && ys)
-        return true;
+void WhosThere::connectDBus() {
+    if(ym && ys) {
+        emit dbus_connected();
+        return;
+    }
 
-    yowsup_main* yb = new yowsup_main("com.yowsup.methods", "/com/yowsup/methods", QDBusConnection::sessionBus(), parent());
+    yowsup_main* yb = new yowsup_main("com.yowsup.methods", "/com/yowsup/methods", QDBusConnection::sessionBus());
     //This will show invalid, even though dbus activation will kick in at init() and launch yowsup
     /*if( !yb->isValid() ) {
         emit auth_fail(username, QString("Dbus error:") + yb->lastError().message());
@@ -29,19 +38,25 @@ bool WhosThere::connectDbus() {
     yb->init("whosthere").waitForFinished();
     delete yb;
 
-    ym = new yowsup_methods("com.yowsup.methods", "/com/yowsup/whosthere/methods", QDBusConnection::sessionBus(), parent());
+    ym = new yowsup_methods("com.yowsup.methods", "/com/yowsup/whosthere/methods", QDBusConnection::sessionBus());
     if( !ym->isValid() ) {
-        emit disconnected(QString("Dbus error:") + ym->lastError().message());
-        return false;
+        emit dbus_fail(QString("Dbus error:") + ym->lastError().message());
+        delete ym;
+        ym = nullptr;
+        return;
     }
 
-    ym->disconnect("");
+    ym->disconnect("dbus_setup");
 
     /* connect com.yowsup.signal */
-    ys = new yowsup_signals("com.yowsup.signals", "/com/yowsup/whosthere/signals", QDBusConnection::sessionBus(), parent());
+    ys = new yowsup_signals("com.yowsup.signals", "/com/yowsup/whosthere/signals", QDBusConnection::sessionBus());
     if( !ys->isValid() ) {
-        emit disconnected(QString("Dbus error:") + ys->lastError().message());
-        return false;
+        emit dbus_fail(QString("Dbus error:") + ys->lastError().message());
+        delete ym;
+        delete ys;
+        ym = nullptr;
+        ys = nullptr;
+        return;
     }
 
 #define CN(X) connect(ys, &yowsup_signals::X, this, &WhosThere::X)
@@ -97,117 +112,90 @@ bool WhosThere::connectDbus() {
     CN(code_register_response);
     CN(code_request_response);
 #undef CN
-    return true;
+    qDebug() << "emit dbus_connected";
+    emit dbus_connected();
+}
+/*
+template<typename R, typename... T, typename... T2>
+void WhosThere::callDbusMethod(QDBusPendingReply<R> (yowsup_methods::*f)(T...), T2&&... parameter) {
+    auto lambda = [](R r) {;};
+    callDbusMethod(f, lambda, std::forward<T2>(parameter)...);
+}*/
+
+/* Calls the given method on yowsup_methods with the given arguments in a new thread.
+ * We have to duplicate the code below, because C++ does not allow template parameters to be void*/
+template<typename... T, typename... T2>
+void WhosThere::callDbusMethod(QDBusPendingReply<> (yowsup_methods::*f)(T...), T2&&... parameter) {
+    QDBusPendingReply<> r = (ym->*f)(std::forward<T2>(parameter)...);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(r);
+    auto lambda = [this] (QDBusPendingCallWatcher *watcher) {
+            QDBusPendingReply<> r = *watcher;
+            if( r.isError() )
+                emit dbus_fail(r.error().message());
+            watcher->deleteLater();
+        };
+    connect(watcher, &QDBusPendingCallWatcher::finished, lambda);
+}
+
+/* Calls the given method on yowsup_methods with the given arguments in a new thread */
+template<typename R, typename... T, typename... T2>
+void WhosThere::callDbusMethod_Callback(QDBusPendingReply<R> (yowsup_methods::*f)(T...),
+                               std::function<void(const R&)> callback, T2&&... parameter) {
+
+    QDBusPendingReply<> r = (ym->*f)(std::forward<T2>(parameter)...);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(r);
+    auto lambda = [this, callback] (QDBusPendingCallWatcher *watcher) {
+            QDBusPendingReply<R> r = *watcher;
+            if( r.isError() )
+                emit dbus_fail(r.error().message());
+            else
+                callback( r.value() );
+            watcher->deleteLater();
+        };
+    connect(watcher, &QDBusPendingCallWatcher::finished, lambda);
 }
 
 void WhosThere::login(const QString& username, const QByteArray& password) {
-    qDebug() << "YowSup login";
-    if(!connectDbus()) {
-        emit auth_fail(username, "Could not connect to dbus");
-        return;
-    }
-
-    QDBusPendingReply<> r = ym->auth_login(username, QByteArray::fromBase64(password));
-    r.waitForFinished();
-    if( r.isError() ) {
-        emit auth_fail(username, QString("Dbus error on auth_login:") + r.error().message());
-        return;
-    }
+    qDebug() << "WhosThere::login";
+    callDbusMethod(&yowsup_methods::auth_login, username, QByteArray::fromBase64(password));
 }
 
 void WhosThere::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText) {
-    qDebug() << "YowSup code request";
-    if(!connectDbus()) {
-        return;
-    }
-
-    QDBusPendingReply<> r = ym->code_request(countryCode, phoneNumber, identity, useText);
-    r.waitForFinished();
-    if( r.isError() ) {
-        qDebug() << "code_request: Dbus error: " <<r.error().message();
-        //TODO
-        //emit code_request_response();
-        return;
-    }
+    callDbusMethod(&yowsup_methods::code_request, countryCode, phoneNumber, identity, useText);
 }
 
 void WhosThere::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity) {
-    qDebug() << "YowSup code request";
-    if(!connectDbus()) {
-        return;
-    }
-
-    QDBusPendingReply<> r = ym->code_register(countryCode, phoneNumber, code, identity);
-    r.waitForFinished();
-    if( r.isError() ) {
-        qDebug() << "code_register: Dbus error: " <<r.error().message();
-        //TODO
-        //emit code_register_response();
-        return;
-    }
+    callDbusMethod(&yowsup_methods::code_register, countryCode, phoneNumber, code, identity);
 }
 
 #define DBUS_METHOD1(X, T) \
 void WhosThere::X(T arg) { \
-    if(!ym) {\
-        qDebug() << "ym == NULL"; \
-        return; \
-    } \
-    QDBusPendingReply<> r = ym->X(arg); \
-    r.waitForFinished(); \
-    if( r.isError() ) { \
-        emit disconnected(QString("Dbus error on " #X ": ") + r.error().message()); \
-        return; \
-    } \
+   callDbusMethod(&yowsup_methods::X, arg); \
 }
 
 #define DBUS_METHOD2(X, T1, T2) \
 void WhosThere::X(T1 arg1, T2 arg2) { \
-    if(!ym) {\
-        qDebug() << "ym == NULL"; \
-        return; \
-    } \
-    QDBusPendingReply<> r = ym->X(arg1, arg2); \
-    r.waitForFinished(); \
-    if( r.isError() ) { \
-        emit disconnected(QString("Dbus error on " #X ": ") + r.error().message()); \
-        return; \
-    } \
+    callDbusMethod(&yowsup_methods::X, arg1, arg2); \
 }
 
-#define DBUS_METHOD4(X, T1, T2, T3, T4) \
+#define DBUS_METHOD4(X, T1, T2) \
 void WhosThere::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
-    if(!ym) {\
-        qDebug() << "ym == NULL"; \
-        return; \
-    } \
-    QDBusPendingReply<> r = ym->X(arg1, arg2, arg3, arg4); \
-    r.waitForFinished(); \
-    if( r.isError() ) { \
-        emit disconnected(QString("Dbus error on " #X ": ") + r.error().message()); \
-        return; \
-    } \
+    callDbusMethod(&yowsup_methods::X, arg1, arg2, arg3, arg4); \
 }
 
-#define DBUS_METHOD2_RETURN(X, R, T1, T2) \
-R WhosThere::X(T1 arg1, T2 arg2) { \
-    if(!ym) {\
-        qDebug() << "ym == NULL"; \
-        return R(); \
-    } \
-    QDBusPendingReply<R> r = ym->X(arg1, arg2); \
-    r.waitForFinished(); \
-    if( r.isError() ) { \
-        emit disconnected(QString("Dbus error on " #X ": ") + r.error().message()); \
-        return R(); \
-    } \
-    return r.value(); \
+/* Calls the dbus method X and emits X_completed with the result.
+ * Don't use references. When the callback is invoked, they can have different values!
+ */
+#define DBUS_METHOD2_RETURN(X, RetVal, T1, T2) \
+void WhosThere::X(T1 arg1, T2 arg2) { \
+    auto callback = [this, arg1, arg2] (const RetVal& ret) { \
+            emit X ## _completed(arg1, arg2, ret); \
+        }; \
+    callDbusMethod_Callback(&yowsup_methods::X, std::function<void(const RetVal&)>(callback), arg1, arg2); \
 }
 
 DBUS_METHOD1(pong,const QString&)
 DBUS_METHOD1(disconnect,const QByteArray&)
-
-DBUS_METHOD2_RETURN(message_send,QString,const QString&,const QByteArray&)
 
 DBUS_METHOD2(message_ack,const QString&,const QString&)
 DBUS_METHOD2(subject_ack,const QString&,const QString&)
@@ -215,3 +203,5 @@ DBUS_METHOD2(notification_ack,const QString&,const QString&)
 DBUS_METHOD2(visible_ack,const QString&,const QString&)
 DBUS_METHOD2(delivered_ack,const QString&,const QString&)
 
+/* Don't use references. When the callback is invoked, they can have different values! */
+DBUS_METHOD2_RETURN(message_send, QString, QString, QByteArray)

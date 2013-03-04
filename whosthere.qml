@@ -13,11 +13,13 @@ MainView {
     //anchors.centerIn: parent
     //anchors.fill: parent
     //color: "lightgray"
-    Component.onCompleted: {
-        DB.updateMessages();
-    }
     Component.onDestruction: {
         whosthere.disconnect("");
+    }
+
+    Component.onCompleted: {
+        Util.log("Component.onCompleted");
+        pagestack.push(page_loading);
     }
 
     PageStack {
@@ -38,17 +40,10 @@ MainView {
                 text: i18n.tr("Connecting ...")
                 anchors { horizontalCenter: parent.horizontalCenter; bottom: activity_ind.top; margins: units.gu(4) }
             }
-            Component.onCompleted: {
-                var valid = DB.getCredentialsValid();
-                var username = DB.getUsername();
-                var password = DB.getPassword();
-
-                if(valid && username && password) {
-                    console.log("Autologin with username " + username + " and password " + password);
-                    pagestack.push(page_loading);
-                    whosthere.login(username, password);
-                } else {
-                    pagestack.push(page_login);
+            onVisibleChanged: {
+                if(visible) {
+                    DB.loadMessages();
+                    whosthere.connectDBus();
                 }
             }
         }
@@ -212,8 +207,10 @@ MainView {
             title: i18n.tr("Contacts")
             anchors.fill: parent
             Label {
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(4) }
                 visible: contactsModel.count == 0
                 text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
+                wrapMode: Text.WordWrap
             }
 
             ListModel {
@@ -333,12 +330,7 @@ MainView {
                 onAccepted: {
                     if( text === "" )
                         return;
-                    var msgId = whosthere.message_send(page_conversation.jid, text)
-                    console.log("Sent message has id " + msgId);
-
-                    DB.addMessage({ "type": "message", "content": text,
-                                      "jid": page_conversation.jid, "msgId": msgId, "timestamp": 0,
-                                      "incoming": 0, "sent": 0, "delivered": 0});
+                    whosthere.message_send(page_conversation.jid, text)
                     text = "";
                 }
             }
@@ -350,15 +342,14 @@ MainView {
     WhosThere {
         id: whosthere
 
+        /* Init/Error */
         onAuth_success: {
-            console.log("auth success for " + username);
+            Util.log("auth success for " + username);
             ready();
             DB.setCredentialsValid(true);
-            DB.loadMessages();
             pagestack.push(page_contacts);
         }
         onAuth_fail: {
-            //PopupUtils.open(errorPopover, whosthere);
             console.log("auth fail for " + username + ", reason: " + reason);
             if(reason == "invalid") {
                 DB.setCredentialsValid(false);
@@ -371,9 +362,28 @@ MainView {
             console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
         }
         onDisconnected: {
-            console.log("OnDisconnected: " + reason);
-            pagestack.push(page_login);
+            Util.log("OnDisconnected: " + reason);
+            if(reason != "dbus_setup")
+                pagestack.push(page_login);
         }
+        onDbus_fail: {
+            Util.log("onDbus_fail " + reason);
+            Qt.quit();
+        }
+        onDbus_connected: {
+            Util.log("onDbus_connected");
+            var valid = DB.getCredentialsValid();
+            var username = DB.getUsername();
+            var password = DB.getPassword();
+
+            if(valid && username && password) {
+                Util.log("Autologin with username " + username + " and password " + password);
+                login(username, password);
+            } else {
+                pagestack.push(page_login);
+            }
+        }
+        /* Messaging */
         onAudio_received: {
             console.log("onAudio_received");
             if(wantsReceipt)
@@ -426,6 +436,12 @@ MainView {
                               "incoming": 1});
             DB.updateMessages();
         }
+        onMessage_send_completed: {
+            Util.log("onMessage_send_completed " + jid + " " + message + " " + msgId);
+            DB.addMessage({ "type": "message", "content": message,
+                              "jid": jid, "msgId": msgId, "timestamp": 0,
+                              "incoming": 0, "sent": 0, "delivered": 0});
+        }
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             delivered_ack(jid, msgId);
@@ -460,6 +476,7 @@ MainView {
             console.log("onPing: " + pingId);
             pong(pingId);
         }
+        /* Registration */
         onCode_request_response: {
             console.log("onCode_request_response: " + status + " " + reason);
             if( status != 'send' ) {
