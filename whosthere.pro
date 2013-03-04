@@ -37,3 +37,6 @@ HEADERS += \
 
 SOURCES += \
     imageprovider.cpp
+
+OTHER_FILES += \
+    util.js

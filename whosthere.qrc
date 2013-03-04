@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>whosthere.qml</file>
         <file>db.js</file>
+        <file>util.js</file>
     </qresource>
 </RCC>

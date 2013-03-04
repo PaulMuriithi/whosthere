@@ -4,6 +4,7 @@ import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItem
 import WhosThere 1.0
 import "db.js" as DB
+import "util.js" as Util
 
 MainView {
     id: root
