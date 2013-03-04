@@ -57,7 +57,12 @@ MainView {
             visible: false
             title: i18n.tr("Login/Register")
             anchors.fill: parent
-            onVisibleChanged: DB.fillCredentials();
+            onVisibleChanged: {
+                if(visible) {
+                    username_txt.text = DB.getUsername();
+                    password_txt.text = DB.getPassword();
+                }
+            }
             Column {
                 anchors.fill: parent
                 Label {
@@ -163,7 +168,7 @@ MainView {
                         if(username_reg_txt.text == "" || countrycode_txt.text == "")
                             return;
                         console.log("onClicked: call code_request");
-                        whosthere.code_request(countrycode_txt.text, username_reg_txt.text, uid_txt.text, true);
+                        whosthere.code_request(countrycode_txt.text, username_reg_txt.text, DB.getUID(), true);
                         DB.setUsername(countrycode_txt.text+username_reg_txt.text);
                         //requesting the code invalidates the old password
                         DB.setPassword('');
@@ -187,12 +192,8 @@ MainView {
                         //Remove hyphon if it exists
                         var code = code_txt.text.replace('-','');
 
-                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, code, uid_txt.text);
+                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, code, DB.getUID());
                     }
-                }
-                Label {
-                    anchors.margins: units.gu(1)
-                    id: uid_txt
                 }
 
                 Label {

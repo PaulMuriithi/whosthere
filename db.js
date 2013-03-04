@@ -177,28 +177,23 @@ function createUID() {
     return s;
 }
 
-function fillCredentials() {
-    console.log("fillCredentials");
-
-    db.transaction(
+function getUID() {
+    var uid;
+    db.readTransaction(
                 function(tx) {
-                        var rs = tx.executeSql('SELECT * FROM Credentials');
-
-                        if(rs.rows.length > 1)
-                            console.log("Error: multiple credentials found");
-
-                        if(rs.rows.length > 0) {
-                            username_txt.text = rs.rows.item(0).username;
-                            password_txt.text = rs.rows.item(0).password;
-                            if(rs.rows.item(0).uid && rs.rows.item(0).uid.length == 32)
-                                uid_txt.text = rs.rows.item(0).uid;
-                        }
+                    var rs = tx.executeSql('SELECT uid FROM Credentials');
+                    if(rs.rows.length == 0) {
+                        console.log('No uid found!');
+                    } else {
+                        uid = rs.rows.item(0).uid;
+                    }
                 }
                 );
-    if(uid_txt.text.length != 32) {
-        uid_txt.text = createUID();
-        setUID(uid_txt.text);
+    if(!uid || uid.length !== 32) {
+        uid = createUID();
+        setUID(uid);
     }
+    return uid;
 }
 
 function getUsername() {
