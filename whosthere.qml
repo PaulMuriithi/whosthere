@@ -20,6 +20,8 @@ MainView {
     Component.onCompleted: {
         Util.log("Component.onCompleted");
         pagestack.push(page_loading);
+        whosthere.connectDBus();
+        DB.loadMessages();
     }
 
     PageStack {
@@ -39,12 +41,6 @@ MainView {
             Label {
                 text: i18n.tr("Connecting ...")
                 anchors { horizontalCenter: parent.horizontalCenter; bottom: activity_ind.top; margins: units.gu(4) }
-            }
-            onVisibleChanged: {
-                if(visible) {
-                    DB.loadMessages();
-                    whosthere.connectDBus();
-                }
             }
         }
 
@@ -206,13 +202,35 @@ MainView {
             visible: false
             title: i18n.tr("Contacts")
             anchors.fill: parent
+            states: [
+                State {
+                    name: "connected"
+                    PropertyChanges {
+                        target: page_contacts
+                        title: i18n.tr("Contacts (connected)")
+                    }
+                    StateChangeScript {
+                        script: { Util.log("State changed to connected") }
+                    }
+                },
+                State {
+                    name: "disconnected"
+                    PropertyChanges {
+                        target: page_contacts
+                        title: i18n.tr("Contacts (disconnected)")
+                    }
+                    StateChangeScript {
+                        script: { Util.log("State changed to disconnected") }
+                    }
+                }
+            ]
+            state: "disconnected"
             Label {
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(4) }
                 visible: contactsModel.count == 0
                 text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
                 wrapMode: Text.WordWrap
             }
-
             ListModel {
                 id: contactsModel
             }
@@ -344,19 +362,21 @@ MainView {
 
         /* Init/Error */
         onAuth_success: {
-            Util.log("auth success for " + username);
+            Util.log("onAuth_success " + username);
             ready();
             DB.setCredentialsValid(true);
-            pagestack.push(page_contacts);
+            page_contacts.state = "connected";
         }
         onAuth_fail: {
             console.log("auth fail for " + username + ", reason: " + reason);
-            if(reason == "invalid") {
-                DB.setCredentialsValid(false);
-                pagestack.push(page_login);
-            } else {
+
+            if(reason != "invalid") {
+                /* reason in "invalid", when we provide wrong credentials.
+                  I wonder what else reason could be. */
                 console.log("onAuth_fail: Unhandled reason: " + reason)
             }
+            DB.setCredentialsValid(false);
+            pagestack.push(page_login);
         }
         onMessage_error: {
             console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
@@ -364,7 +384,7 @@ MainView {
         onDisconnected: {
             Util.log("OnDisconnected: " + reason);
             if(reason != "dbus_setup")
-                pagestack.push(page_login);
+                page_contacts.state = "disconnected";
         }
         onDbus_fail: {
             Util.log("onDbus_fail " + reason);
@@ -375,7 +395,8 @@ MainView {
             var username = DB.getUsername();
             var password = DB.getPassword();
 
-            if(valid && username && password) {
+            if(hasValidCredentials()) {
+                pagestack.push(page_contacts);
                 Util.log("Autologin with username " + username + " and password " + password);
                 login(username, password);
             } else {
@@ -494,7 +515,15 @@ MainView {
             }
         }
     }
+
     function getPreviewImage(id) {
         return DB.getPreviewImage(id);
+    }
+
+    function hasValidCredentials() {
+        var valid = DB.getCredentialsValid();
+        var username = DB.getUsername();
+        var password = DB.getPassword();
+        return (valid && username && password);
     }
 }
