@@ -20,8 +20,14 @@
 
 #include <functional>
 #include <QQuickItem>
-#include "yowsup_signals.h"
-#include "yowsup_methods.h"
+#include <TelepathyQt/Types>
+#include <TelepathyQt/Account>
+#include <TelepathyQt/PendingAccount>
+#include <TelepathyQt/ClientRegistrar>
+#include <TelepathyQt/SimpleTextObserver>
+
+using namespace Tp;
+class TelepathyClient;
 
 class WhosThere : public QQuickItem
 {
@@ -30,76 +36,34 @@ public:
     explicit WhosThere(QQuickItem *parent = 0);
     ~WhosThere();
 private:
-    template<typename R, typename... T, typename... T2>
-    void callDbusMethod_Callback(QDBusPendingReply<R> (yowsup_methods::*f)(T...), std::function<void(const R&)> callback,
-                                 T2&&... parameter);
-    template<typename... T, typename... T2>
-    void callDbusMethod(QDBusPendingReply<> (yowsup_methods::*f)(T...), T2&&... parameter);
-
-    yowsup_signals* ys;
-    yowsup_methods* ym;
+    AccountManagerPtr mAM;
+    ConnectionManagerPtr cm;
+    AccountPtr mAccount;
+    ConnectionPtr mConn;
+    ClientRegistrarPtr mCR;
+    SharedPtr<TelepathyClient> mHandler;
+    SimpleTextObserverPtr m_simpleTextObserver;
 public slots:
-    void connectDBus();
+    //void onCMReady(PendingOperation *op);
+    void onContactManagerStateChanged(ContactListState state);
+    void onAMReady(PendingOperation *op);
+    void onAccountFinished(PendingOperation* acc);
+    void onAccountConnectionChanged(const ConnectionPtr &conn);
+    void onAccountSetEnabled(PendingOperation* acc);
+    void onAccountCreateFinished(PendingOperation* op);
+    void onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
     /* Misc */
     void login(const QString& username, const QByteArray& password);
-    void ready();
-    void pong(const QString &pingId);
     void disconnect(const QByteArray& reason);
 
     void code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity);
     void code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText);
-    //void ping();
-
-    /*void typing_send(const QDBusVariant &jid);
-    void typing_paused(const QDBusVariant &jid);
-    void clientconfig_send();
-    void picture_getIds(const QDBusVariant &jids);
-    void getVersion();
-
-    void contact_getProfilePicture(const QDBusVariant &jid);*/
-
-    /* Profile */
-    /*void profile_setStatus(const QDBusVariant &status);
-    void profile_setPicture(const QDBusVariant &filepath);
-    void profile_getPicture();*/
-
-    /* Presence */
-    /*void presence_unsubscribe(const QDBusVariant &jid);
-    void presence_subscribe(const QDBusVariant &jid);
-    void presence_sendUnavailable();
-    void presence_sendAvailableForChat();
-    void presence_sendAvailable();
-    void presence_request(const QDBusVariant &jid);*/
-
-    /* Message */
-    //void message_videoSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size, const QDBusVariant &preview);
-    //void message_vcardSend(const QDBusVariant &jid, const QDBusVariant &data, const QDBusVariant &name);
     void message_send(QString jid, QByteArray message);
-    //void message_locationSend(const QDBusVariant &jid, const QDBusVariant &latitude, const QDBusVariant &longitude, const QDBusVariant &preview);
-    //void message_imageSend(const QString &jid, const QString &url, const QString &name, int size, const QString &preview);
-    //void message_audioSend(const QDBusVariant &jid, const QDBusVariant &url, const QDBusVariant &name, const QDBusVariant &size);
-
-    /* Group */
-    /* todo */
-
-    /* Ack */
-    /* group_subjectReceived!, message_received */
-    void message_ack(const QString& jid, const QString &messageId);
-    /* ??? */
-    void visible_ack(const QString &jid, const QString &msgId);
-    /* ??? */
-    void subject_ack(const QString &jid, const QString &msgId);
-    /* For notification_contactProfilePictureUpdated!, notification_groupPictureUpdated!,
-     * notification_groupParticipantAdded!, notification_groupParticipantRemoved! */
-    void notification_ack(const QString &jid, const QString &msgId);
-    /* For receipt_messageDelivered, profile_setStatusSuccess! */
-    void delivered_ack(const QString &jid, const QString &msgId);
 
 signals:
     void dbus_fail(const QString& reason);
     void dbus_connected();
     void message_send_completed(const QString &jid, const QString &message, const QString& msgId);
-    /* Keep in sync with yowsup_signals.h */
     void audio_received(const QString &msgId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);

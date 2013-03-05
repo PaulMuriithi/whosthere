@@ -1,18 +1,14 @@
 QT += qml dbus quick
+INCLUDEPATH += /usr/include/telepathy-qt5
+LIBS += -ltelepathy-qt5
 
 DEFINES += QMLJSDEBUGGER
 QMAKE_CXXFLAGS += -Wall -std=c++0x
 
 SOURCES += main.cpp \
-           whosthere.cpp \
-		   yowsup_main.cpp \
-		   yowsup_signals.cpp \
-		   yowsup_methods.cpp \
+           whosthere.cpp
 
-HEADERS += whosthere.h \
-		   yowsup_main.h \
-		   yowsup_signals.h \
-		   yowsup_methods.h
+HEADERS += whosthere.h
 
 RESOURCES += whosthere.qrc
 
@@ -40,3 +36,9 @@ SOURCES += \
 
 OTHER_FILES += \
     util.js
+
+HEADERS += \
+    telepathyclient.h
+
+SOURCES += \
+    telepathyclient.cpp

@@ -37,8 +37,7 @@ MainView {
 
     Component.onCompleted: {
         Util.log("Component.onCompleted");
-        pagestack.push(page_loading);
-        whosthere.connectDBus();
+        pagestack.push(page_contacts);
         DB.loadMessages();
     }
 
@@ -385,9 +384,8 @@ MainView {
         /* Init/Error */
         onAuth_success: {
             Util.log("onAuth_success " + username);
-            ready();
             DB.setCredentialsValid(true);
-            if(pagestack.currentPage == page_login)
+            if(pagestack.currentPage == page_login || pagestack.currentPage == page_loading)
                 pagestack.push(page_contacts);
             page_contacts.state = "connected";
         }
@@ -430,8 +428,7 @@ MainView {
         /* Messaging */
         onAudio_received: {
             console.log("onAudio_received");
-            if(wantsReceipt)
-                message_ack(jid, msgId);
+
             DB.addMessage({ "type": "audio", "url": url,
                               "jid": jid, "msgId": msgId, "size":  size,
                               "incoming": 1});
@@ -439,8 +436,6 @@ MainView {
         }
         onMessage_received: {
             console.log("OnMessage_received: " + msgId + " " + jid + " " + content + " " + timestamp + " " + wantsReceipt);
-            if(wantsReceipt)
-                message_ack(jid, msgId);
             DB.addMessage({ "type": "message", "content": content,
                               "jid": jid, "msgId": msgId, "timestamp":  timestamp,
                               "incoming": 1});
@@ -449,8 +444,6 @@ MainView {
         onImage_received: {
             console.log("onImage_received " + url + " " + size);
 
-            if(wantsReceipt)
-                message_ack(jid, msgId);
             DB.addMessage({ "type": "image", "preview": preview,
                               "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
                               "size": size, "url" : url,
@@ -460,8 +453,6 @@ MainView {
         onVideo_received : {
             console.log("onImage_received " + url + " " + size);
 
-            if(wantsReceipt)
-                message_ack(jid, msgId);
             DB.addMessage({ "type": "video", "preview": preview,
                               "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
                               "size": size, "url" : url,
@@ -472,8 +463,6 @@ MainView {
             //
             console.log("onLocation_received " + name  + " " + latitude + " " + longitude);
 
-            if(wantsReceipt)
-                message_ack(jid, msgId);
             DB.addMessage({ "type": "location", "content": name, "preview": preview,
                               "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
                               "latitude": latitude, "longitude" : longitude,
@@ -489,7 +478,6 @@ MainView {
         }
         onReceipt_messageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
-            delivered_ack(jid, msgId);
             DB.setDelivered(jid,msgId);
             DB.loadMessages();
         }
@@ -517,10 +505,6 @@ MainView {
             console.log("OnContact_typing: " + jid);
         }
 
-        onPing: {
-            console.log("onPing: " + pingId);
-            pong(pingId);
-        }
         /* Registration */
         onCode_request_response: {
             console.log("onCode_request_response: " + status + " " + reason);

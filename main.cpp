@@ -20,6 +20,10 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
+
+#include <TelepathyQt/Debug>
+#include <TelepathyQt/Types>
+
 #include "whosthere.h"
 #include "imageprovider.h"
 
@@ -28,6 +32,10 @@ QQuickView* viewer;
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
+
+    Tp::registerTypes();
+    Tp::enableDebug(true);
+    Tp::enableWarnings(true);
 
     qmlRegisterType<WhosThere>("WhosThere", 1,0, "WhosThere");
 

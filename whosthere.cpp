@@ -17,209 +17,201 @@
  */
 
 #include <QDebug>
-#include "yowsup_main.h"
+#include <TelepathyQt/Debug>
+#include <TelepathyQt/AccountSet>
+#include <TelepathyQt/ConnectionManager>
+#include <TelepathyQt/AccountManager>
+#include <TelepathyQt/ContactManager>
+#include <TelepathyQt/AccountFactory>
+#include <TelepathyQt/PendingReady>
+#include <TelepathyQt/PendingAccount>
+#include <TelepathyQt/ContactMessenger>
+
 #include "whosthere.h"
+#include "telepathyclient.h"
 
 using namespace std;
 
 WhosThere::WhosThere(QQuickItem *parent) :
-    QQuickItem(parent), ys(0), ym(0)
+    QQuickItem(parent)
 {
+
+    AccountFactoryPtr accountFactory = AccountFactory::create(QDBusConnection::sessionBus(),
+        Account::FeatureCore);
+
+    ConnectionFactoryPtr connectionFactory = ConnectionFactory::create(QDBusConnection::sessionBus(),
+                Connection::FeatureConnected | Connection::FeatureConnected |
+                Connection::FeatureRoster | Connection::FeatureRosterGroups);
+
+    ChannelFactoryPtr channelFactory = ChannelFactory::create(QDBusConnection::sessionBus());
+
+    ContactFactoryPtr contactFactory = ContactFactory::create(Contact::FeatureAlias | Contact::FeatureSimplePresence);
+
+    mAM = Tp::AccountManager::create(accountFactory, connectionFactory, channelFactory, contactFactory);
+
+    /*mCR = ClientRegistrar::create(accountFactory, connectionFactory,
+                channelFactory);
+
+    mHandler = TelepathyClient::create();
+    QString handlerName(QLatin1String("TpQtExampleFileReceiverHandler"));
+    if (!mCR->registerClient(AbstractClientPtr::dynamicCast(mHandler), handlerName)) {
+        qWarning() << "Unable to register incoming file transfer handler, aborting";
+    }*/
+    /*cm = ConnectionManager::create("yowsup");
+    connect(mCM->becomeReady(),
+                SIGNAL(finished(Tp::PendingOperation *)),
+                SLOT(onCMReady(Tp::PendingOperation *)));*/
+    connect(mAM->becomeReady(), &PendingOperation::finished,
+            this, &WhosThere::onAMReady);
+    connect(mAM.data(),
+                SIGNAL(newAccount(const Tp::AccountPtr &)),
+                SLOT(onNewAccount(const Tp::AccountPtr &)));
 }
+
 
 WhosThere::~WhosThere() {
-    delete ys;
-    delete ym;
+
 }
 
-void WhosThere::ready() {
-    QDBusPendingReply<> r = ym->ready();
-    r.waitForFinished();
-    if( r.isError() ) {
-        emit disconnected(QString("Dbus error on ready:") + r.error().message());
+void WhosThere::onAMReady(Tp::PendingOperation *op)
+{
+    if (op->isError()) {
+        qWarning() << "AM cannot become ready -" <<
+            op->errorName() << ": " << op->errorMessage();
+        return;
+    }
+
+    QList< AccountPtr >  accounts = mAM->accountsByProtocol("whatsapp")->accounts();
+    qDebug() << "number of accounts: " << accounts.size();
+    if(accounts.size() == 0) {
+        qDebug() << "Creating new account";
+        QVariantMap parameters;
+        parameters.insert( "password", QVariant("C7+4QINyzdXK7iq6wAEMhqwcjIQ="));
+        parameters.insert( "phonenumber", QVariant("14155280162"));
+        QVariantMap properties;
+        properties.insert( "org.freedesktop.Telepathy.Account.Enabled", true );
+        PendingAccount* acc = mAM->createAccount("yowsup", "whatsapp", "1. WhatApp Account", parameters, properties);
+
+        connect(acc, &PendingAccount::finished,
+                this, &WhosThere::onAccountCreateFinished );
+    } else {
+        mAccount = *accounts.begin();
+        connect(mAccount->becomeReady(), &PendingOperation::finished,
+                this, &WhosThere::onAccountFinished);
+    }
+}
+
+void WhosThere::onAccountCreateFinished(PendingOperation* op) {
+    if (op->isError()) {
+        qWarning() << "Account cannot become created -" <<
+            op->errorName() << ": " << op->errorMessage();
+        return;
+    }
+    mAccount = dynamic_cast<PendingAccount*>(op)->account();
+    connect(mAccount->becomeReady(), &PendingOperation::finished,
+            this, &WhosThere::onAccountFinished);
+}
+
+void WhosThere::onAccountFinished(PendingOperation* op) {
+    if (op->isError()) {
+        qWarning() << "Account cannot become ready -" <<
+            op->errorName() << ": " << op->errorMessage();
+        return;
+    }
+    //qDebug() << "WhosThere::setAccount nickname: " << account->cmName();
+    qDebug() << "WhosThere::setAccount valid : " << mAccount->isValidAccount() << " enabled: " << mAccount->isEnabled();
+    if(!mAccount->isEnabled()) //FIXME
+        connect(mAccount->setEnabled(true), &PendingOperation::finished,
+                this, &WhosThere::onAccountSetEnabled);
+
+    SimpleTextObserverPtr m_simpleTextObserver = SimpleTextObserver::create(mAccount);
+    connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageReceived,
+            this, &WhosThere::onMessageReceived);
+    //mAccount->setConnectsAutomatically(true); //FIXME
+    connect(mAccount.data(), &Account::connectionChanged,
+            this, &WhosThere::onAccountConnectionChanged);
+    onAccountConnectionChanged(mAccount->connection());
+}
+
+void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel) {
+    qDebug() << "WhosThere::onMessageReceived isDeliveryReport: " << message.isDeliveryReport()
+             << " text: " << message.text()
+             << " sender: " << message.sender()->id();
+}
+
+void WhosThere::onAccountSetEnabled(PendingOperation* acc) {
+    if (acc->isError()) {
+        qWarning() << "Account cannot become set enabled -" <<
+            acc->errorName() << ": " << acc->errorMessage();
         return;
     }
 }
 
-void WhosThere::connectDBus() {
-    if(ym && ys) {
-        emit dbus_connected();
-        return;
+void WhosThere::onAccountConnectionChanged(const ConnectionPtr &conn)
+{
+    if (conn) {
+        qDebug() << "WhosThere::onAccountConnectionChanged";
+        mConn = conn;
+        emit auth_success("");
+        connect(mConn->contactManager().data(), &ContactManager::stateChanged,
+                this, &WhosThere::onContactManagerStateChanged);
+        onContactManagerStateChanged(mConn->contactManager()->state());
+    } else {
+        qDebug() << " WhosThere::onAccountConnectionChanged: conn = NULL";
     }
+}
 
-    yowsup_main* yb = new yowsup_main("com.yowsup.methods", "/com/yowsup/methods", QDBusConnection::sessionBus());
-    //This will show invalid, even though dbus activation will kick in at init() and launch yowsup
-    /*if( !yb->isValid() ) {
-        emit auth_fail(username, QString("Dbus error:") + yb->lastError().message());
-        return;
-    }*/
-    yb->init("whosthere").waitForFinished();
-    delete yb;
-
-    ym = new yowsup_methods("com.yowsup.methods", "/com/yowsup/whosthere/methods", QDBusConnection::sessionBus());
-    if( !ym->isValid() ) {
-        emit dbus_fail(QString("Dbus error:") + ym->lastError().message());
-        delete ym;
-        ym = nullptr;
-        return;
+void WhosThere::onContactManagerStateChanged(ContactListState state)
+{
+    qDebug() << "WhosThere::onContactManagerStateChanged " << state;
+    if (state == ContactListStateSuccess) {
+        qDebug() << "Loading contacts";
+        foreach (const ContactPtr &contact, mConn->contactManager()->allKnownContacts()) {
+            qDebug() << "Contact id: " << contact->id();
+        }
     }
-
-    ym->disconnect("dbus_setup");
-
-    /* connect com.yowsup.signal */
-    ys = new yowsup_signals("com.yowsup.signals", "/com/yowsup/whosthere/signals", QDBusConnection::sessionBus());
-    if( !ys->isValid() ) {
-        emit dbus_fail(QString("Dbus error:") + ys->lastError().message());
-        delete ym;
-        delete ys;
-        ym = nullptr;
-        ys = nullptr;
-        return;
-    }
-
-#define CN(X) connect(ys, &yowsup_signals::X, this, &WhosThere::X)
-    CN(audio_received);
-    CN(auth_fail);
-    CN(auth_success);
-    CN(contact_gotProfilePicture);
-    CN(contact_gotProfilePictureId);
-    CN(contact_paused);
-    CN(contact_typing);
-    CN(disconnected);
-    CN(group_addParticipantsSuccess);
-    CN(group_audioReceived);
-    CN(group_createFail);
-    CN(group_createSuccess);
-    CN(group_endSuccess);
-    CN(group_gotInfo);
-    CN(group_gotParticipants);
-    CN(group_gotPicture);
-    CN(group_imageReceived);
-    CN(group_infoError);
-    CN(group_locationReceived);
-    CN(group_messageReceived);
-    CN(group_removeParticipantsSuccess);
-    CN(group_setPictureError);
-    CN(group_setPictureSuccess);
-    CN(group_setSubjectSuccess);
-    CN(group_subjectReceived);
-    CN(group_vcardReceived);
-    CN(group_videoReceived);
-    CN(image_received);
-    CN(location_received);
-    CN(message_error);
-    CN(message_received);
-    CN(notification_contactProfilePictureUpdated);
-    CN(notification_groupParticipantAdded);
-    CN(notification_groupParticipantRemoved);
-    CN(notification_groupPictureUpdated);
-    CN(ping);
-    //CN(pong);
-    CN(presence_available);
-    CN(presence_unavailable);
-    CN(presence_updated);
-    CN(profile_setPictureError);
-    CN(profile_setPictureSuccess);
-    CN(profile_setStatusSuccess);
-    CN(receipt_messageDelivered);
-    CN(receipt_messageSent);
-    CN(receipt_visible);
-    CN(status_dirty);
-    CN(vcard_received);
-    CN(video_received);
-    CN(code_register_response);
-    CN(code_request_response);
-#undef CN
-    qDebug() << "emit dbus_connected";
-    emit dbus_connected();
 }
 /*
-template<typename R, typename... T, typename... T2>
-void WhosThere::callDbusMethod(QDBusPendingReply<R> (yowsup_methods::*f)(T...), T2&&... parameter) {
-    auto lambda = [](R r) {;};
-    callDbusMethod(f, lambda, std::forward<T2>(parameter)...);
+void WhosThere::onCMReady(PendingOperation *op)
+{
+    if (op->isError()) {
+        qWarning() << "CM" << cm->name() << "cannot become ready -" <<
+            op->errorName() << ": " << op->errorMessage();
+        return;
+    }
+
+    qDebug() << "CM" << cm->name() << "ready!";
+    qDebug() << "Supported protocols:";
+    ProtocolInfo pi = mCM->protocol("whatsapp");
+
+    connect(conn->contactManager().data(),
+            SIGNAL(presencePublicationRequested(const Tp::Contacts &)),
+            SLOT(onPresencePublicationRequested(const Tp::Contacts &)));
+    // TODO listen to allKnownContactsChanged
+
+    connect(conn->contactManager().data(),
+            SIGNAL(stateChanged(Tp::ContactListState)),
+            SLOT(onContactManagerStateChanged(Tp::ContactListState)));
 }*/
 
-/* Calls the given method on yowsup_methods with the given arguments in a new thread.
- * We have to duplicate the code below, because C++ does not allow template parameters to be void*/
-template<typename... T, typename... T2>
-void WhosThere::callDbusMethod(QDBusPendingReply<> (yowsup_methods::*f)(T...), T2&&... parameter) {
-    QDBusPendingReply<> r = (ym->*f)(std::forward<T2>(parameter)...);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(r);
-    auto lambda = [this] (QDBusPendingCallWatcher *watcher) {
-            QDBusPendingReply<> r = *watcher;
-            if( r.isError() )
-                emit dbus_fail(r.error().message());
-            watcher->deleteLater();
-        };
-    connect(watcher, &QDBusPendingCallWatcher::finished, lambda);
+
+void WhosThere::message_send(QString jid, QByteArray message)
+{
+    ContactMessengerPtr contactMessenger = ContactMessenger::create(mAccount, jid);
+    if(!contactMessenger) {
+        qDebug() << "WhosThere::message_send: contactMessenger = NULL";
+        return;
+    }
+    contactMessenger->sendMessage(message);
 }
 
-/* Calls the given method on yowsup_methods with the given arguments in a new thread */
-template<typename R, typename... T, typename... T2>
-void WhosThere::callDbusMethod_Callback(QDBusPendingReply<R> (yowsup_methods::*f)(T...),
-                               std::function<void(const R&)> callback, T2&&... parameter) {
+void WhosThere::login(const QString& username, const QByteArray& password)
+{}
+void WhosThere::disconnect(const QByteArray& reason)
+{}
 
-    QDBusPendingReply<> r = (ym->*f)(std::forward<T2>(parameter)...);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(r);
-    auto lambda = [this, callback] (QDBusPendingCallWatcher *watcher) {
-            QDBusPendingReply<R> r = *watcher;
-            if( r.isError() )
-                emit dbus_fail(r.error().message());
-            else
-                callback( r.value() );
-            watcher->deleteLater();
-        };
-    connect(watcher, &QDBusPendingCallWatcher::finished, lambda);
-}
+void WhosThere::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity)
+{}
+void WhosThere::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText)
+{}
 
-void WhosThere::login(const QString& username, const QByteArray& password) {
-    qDebug() << "WhosThere::login";
-    callDbusMethod(&yowsup_methods::auth_login, username, QByteArray::fromBase64(password));
-}
-
-void WhosThere::code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText) {
-    callDbusMethod(&yowsup_methods::code_request, countryCode, phoneNumber, identity, useText);
-}
-
-void WhosThere::code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity) {
-    callDbusMethod(&yowsup_methods::code_register, countryCode, phoneNumber, code, identity);
-}
-
-#define DBUS_METHOD1(X, T) \
-void WhosThere::X(T arg) { \
-   callDbusMethod(&yowsup_methods::X, arg); \
-}
-
-#define DBUS_METHOD2(X, T1, T2) \
-void WhosThere::X(T1 arg1, T2 arg2) { \
-    callDbusMethod(&yowsup_methods::X, arg1, arg2); \
-}
-
-#define DBUS_METHOD4(X, T1, T2) \
-void WhosThere::X(T1 arg1, T2 arg2, T3 arg3, T4 arg4) { \
-    callDbusMethod(&yowsup_methods::X, arg1, arg2, arg3, arg4); \
-}
-
-/* Calls the dbus method X and emits X_completed with the result.
- * Don't use references. When the callback is invoked, they can have different values!
- */
-#define DBUS_METHOD2_RETURN(X, RetVal, T1, T2) \
-void WhosThere::X(T1 arg1, T2 arg2) { \
-    auto callback = [this, arg1, arg2] (const RetVal& ret) { \
-            emit X ## _completed(arg1, arg2, ret); \
-        }; \
-    callDbusMethod_Callback(&yowsup_methods::X, std::function<void(const RetVal&)>(callback), arg1, arg2); \
-}
-
-DBUS_METHOD1(pong,const QString&)
-DBUS_METHOD1(disconnect,const QByteArray&)
-
-DBUS_METHOD2(message_ack,const QString&,const QString&)
-DBUS_METHOD2(subject_ack,const QString&,const QString&)
-DBUS_METHOD2(notification_ack,const QString&,const QString&)
-DBUS_METHOD2(visible_ack,const QString&,const QString&)
-DBUS_METHOD2(delivered_ack,const QString&,const QString&)
-
-/* Don't use references. When the callback is invoked, they can have different values! */
-DBUS_METHOD2_RETURN(message_send, QString, QString, QByteArray)
