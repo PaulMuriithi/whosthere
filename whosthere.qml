@@ -207,7 +207,7 @@ MainView {
                 State {
                     name: "connected"
                     PropertyChanges {
-                        target: online_status_lbl
+                        target: online_status_btn
                         text: i18n.tr("connected")
                     }
                     StateChangeScript {
@@ -217,7 +217,7 @@ MainView {
                 State {
                     name: "connecting"
                     PropertyChanges {
-                        target: online_status_lbl
+                        target: online_status_btn
                         text: i18n.tr("connecting")
                     }
                     StateChangeScript {
@@ -227,7 +227,7 @@ MainView {
                 State {
                     name: "disconnected"
                     PropertyChanges {
-                        target: online_status_lbl
+                        target: online_status_btn
                         text: i18n.tr("disconnected")
                     }
                     StateChangeScript {
@@ -236,19 +236,21 @@ MainView {
                 }
             ]
             state: "disconnected"
-            Label {
-                id: online_status_lbl
+            Button {
+                id: online_status_btn
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(2) }
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
                         if(page_contacts.state == "disconnected")
                             whosthere.connectAccount();
+                        else
+                            whosthere.disconnect();
                     }
                 }
             }
             Label {
-                anchors { left: parent.left; right: parent.right; top: online_status_lbl.bottom; margins: units.gu(4) }
+                anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(4) }
                 visible: contactsModel.count == 0
                 text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
                 wrapMode: Text.WordWrap
@@ -257,7 +259,7 @@ MainView {
                 id: contactsModel
             }
             ListView {
-                anchors { left: parent.left; right: parent.right; top: online_status_lbl.bottom; margins: units.gu(2) }
+                anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
                     text: jid + " ( time: " + timestamp + " )"
@@ -421,94 +423,22 @@ MainView {
             if(parameters["account"])
                 username_txt.text = parameters["account"];
         }
+        onNewMessage: {
+            DB.addMessage(data);
+            DB.updateMessages();
+        }
 
-        onMessage_error: {
-            console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
-        }
-        onDisconnected: {
-            Util.log("OnDisconnected: " + reason);
-            if(reason != "dbus_setup")
-                page_contacts.state = "disconnected";
-        }
-        /* Messaging */
-        onAudio_received: {
-            console.log("onAudio_received");
-
-            DB.addMessage({ "type": "audio", "url": url,
-                              "jid": jid, "msgId": msgId, "size":  size,
-                              "incoming": 1});
-            DB.updateMessages();
-        }
-        onMessage_received: {
-            console.log("OnMessage_received: " + msgId + " " + jid + " " + content + " " + timestamp + " " + wantsReceipt);
-            DB.addMessage({ "type": "message", "content": content,
-                              "jid": jid, "msgId": msgId, "timestamp":  timestamp,
-                              "incoming": 1});
-            DB.updateMessages();
-        }
-        onImage_received: {
-            console.log("onImage_received " + url + " " + size);
-
-            DB.addMessage({ "type": "image", "preview": preview,
-                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                              "size": size, "url" : url,
-                              "incoming": 1});
-            DB.updateMessages();
-        }
-        onVideo_received : {
-            console.log("onImage_received " + url + " " + size);
-
-            DB.addMessage({ "type": "video", "preview": preview,
-                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                              "size": size, "url" : url,
-                              "incoming": 1});
-            DB.updateMessages();
-        }
-        onLocation_received : {
-            //
-            console.log("onLocation_received " + name  + " " + latitude + " " + longitude);
-
-            DB.addMessage({ "type": "location", "content": name, "preview": preview,
-                              "jid": jid, "msgId": msgId, /*"timestamp":  timestamp,*/
-                              "latitude": latitude, "longitude" : longitude,
-                              "incoming": 1});
-            DB.updateMessages();
-        }
-        onMessage_send_completed: {
-            Util.log("onMessage_send_completed " + jid + " " + message + " " + msgId);
-            DB.addMessage({ "type": "message", "content": message,
-                              "jid": jid, "msgId": msgId, "timestamp": 0,
-                              "incoming": 0, "sent": 0, "delivered": 0});
-            DB.updateMessages();
-        }
-        onReceipt_messageDelivered: {
+        onMessageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             DB.setDelivered(jid,msgId);
             DB.loadMessages();
         }
-        onReceipt_messageSent: {
+        onMessageSent: {
             console.log("OnReceipt_messageSent: " + jid + " " + msgId);
             DB.setSent(jid,msgId);
             DB.loadMessages();
         }
-        onReceipt_visible: {
-            Util.log("OnReceipt_visible: " + jid + " " + msgId);
-        }
-        onStatus_dirty: {
-            Util.log("OnStatus_dirty");
-        }
-        onContact_gotProfilePicture: {
-            Util.log("OnContact_gotProfilePicture: " + jid + " " + filename);
-        }
-        onContact_gotProfilePictureId: {
-            Util.log("OnContact_gotProfilePictureId: " + jid + " " + pictureId);
-        }
-        onContact_paused: {
-            Util.log("OnReceipt_visible: " + jid);
-        }
-        onContact_typing: {
-            Util.log("OnContact_typing: " + jid);
-        }
+
         /* Registration */
         onCode_request_response: {
             Util.log("onCode_request_response: " + status );

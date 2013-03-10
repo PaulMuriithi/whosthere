@@ -71,6 +71,10 @@ private:
     void onPendingOperation(PendingOperation* op);
     void onAccountCreateFinished(PendingOperation* op);
     void onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
+    void onMessageSent (const Tp::Message& message,
+                                    Tp::MessageSendingFlags flags,
+                                    const QString& msgId,
+                                    const Tp::TextChannelPtr& channel);
     void onConnectionStatusChanged(uint status);
     void onAccountInvalidated();
 
@@ -97,13 +101,17 @@ signals:
     void code_request_response(const QString &status, const QString &reason);
     void code_register_response(const QString &status, const QString &pw);
 
+    void newMessage(QVariantMap data);
+    void messageSent(QString jid, QString msgId);
+    void messageDelivered(QString jid, QString msgId);
 
+ /*
+    void auth_fail(const QString &username, const QString &reason);
+    void auth_success(const QString &username);
     void dbus_fail(const QString& reason);
     void dbus_connected();
     void message_send_completed(const QString &jid, const QString &message, const QString& msgId);
     void audio_received(const QString &msgId, const QString &jid, const QString &url, int size, bool wantsReceipt);
-    void auth_fail(const QString &username, const QString &reason);
-    void auth_success(const QString &username);
 
     void contact_gotProfilePicture(const QString &jid, const QString &filename);
     void contact_gotProfilePictureId(const QString &jid, const QString &pictureId);
@@ -151,6 +159,7 @@ signals:
     void status_dirty();
     void vcard_received(const QString &msgId, const QString &jid, const QString &name, const QString &data, bool wantsReceipt);
     void video_received(const QString &msgId, const QString &jid, const QString &preview, const QString &url, int size, bool wantsReceipt);
+    */
 };
 
 #endif // YOWSUP_H

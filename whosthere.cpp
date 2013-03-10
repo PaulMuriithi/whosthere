@@ -34,12 +34,14 @@
 #include <TelepathyQt/PendingAccount>
 #include <TelepathyQt/PendingStringList>
 #include <TelepathyQt/ContactMessenger>
+#include <TelepathyQt/TextChannel>
 
 #include "whosthere.h"
 #include "telepathyclient.h"
 
 using namespace std;
 
+/* --------------------------------- Account Manager ---------------------------------*/
 WhosThere::WhosThere(QQuickItem *parent) :
     QQuickItem(parent)
 {
@@ -57,11 +59,13 @@ WhosThere::WhosThere(QQuickItem *parent) :
 
     mCR = ClientRegistrar::create(accountFactory, connectionFactory, channelFactory);
 
+    /*
     mHandler = TelepathyClient::create();
     QString handlerName(QLatin1String("WhosThereGui"));
     if (!mCR->registerClient(AbstractClientPtr::dynamicCast(mHandler), handlerName)) {
         qWarning() << "Unable to register incoming file transfer handler, aborting";
     }
+*/
 
     mAM = Tp::AccountManager::create(accountFactory, connectionFactory, channelFactory, contactFactory);
     qDebug() << "Waiting for account manager";
@@ -97,6 +101,49 @@ void WhosThere::onAMReady(Tp::PendingOperation *op)
         connect(mAccount->becomeReady(), &PendingOperation::finished,
                 this, &WhosThere::onAccountFinished);
     }
+}
+
+/* --------------------------------- Account ---------------------------------*/
+
+void WhosThere::set_account(const QString& phonenumber, const QString& password)
+{
+    QVariantMap parameters;
+    if(phonenumber.length() > 0)
+        parameters.insert( "account", QVariant(phonenumber));
+    if(password.length() > 0)
+        parameters.insert( "password", QVariant(password));
+
+    if(mAccount.isNull()) {
+        if(phonenumber.length() == 0 || password.length() == 0) {
+            qWarning() << "WhosThere::set_account: phonenumber.length() == 0 || password.length() == 0";
+            return;
+        }
+        QVariantMap properties;
+        properties.insert( "org.freedesktop.Telepathy.Account.Enabled", true );
+        PendingAccount* acc = mAM->createAccount("whosthere", "whatsapp", "WhatApp Account", parameters, properties);
+
+        connect(acc, &PendingAccount::finished,
+                this, &WhosThere::onAccountCreateFinished );
+    } else {
+        PendingStringList* sl = mAccount->updateParameters(parameters, QStringList());
+        connect(sl, &Tp::PendingStringList::finished,
+                this, &WhosThere::onPendingOperation);
+    }
+}
+
+void WhosThere::connectAccount() {
+    if(!mAccount.isNull())
+        mAccount->setRequestedPresence(Presence::available());
+}
+
+void WhosThere::removeAccount() {
+    if(!mAccount.isNull())
+        mAccount->remove();
+}
+
+void WhosThere::disconnect() {
+    if(!mAccount.isNull())
+        mAccount->setRequestedPresence(Presence::offline());
 }
 
 void WhosThere::onAccountCreateFinished(PendingOperation* op) {
@@ -141,6 +188,8 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
     m_simpleTextObserver = SimpleTextObserver::create(mAccount);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageReceived,
             this, &WhosThere::onMessageReceived);
+    connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageSent,
+            this, &WhosThere::onMessageSent);
 
     connect(mAccount.data(), &Account::connectionChanged,
             this, &WhosThere::onAccountConnectionChanged);
@@ -158,12 +207,6 @@ void WhosThere::onAccountInvalidated() {
     emit noAccount();
 }
 
-void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel) {
-    qDebug() << "WhosThere::onMessageReceived isDeliveryReport: " << message.isDeliveryReport()
-             << " text: " << message.text()
-             << " sender: " << message.sender()->id();
-}
-
 void WhosThere::onPendingOperation(PendingOperation* acc) {
     if (acc->isError()) {
         qWarning() << "Pending operation failed: " <<
@@ -172,6 +215,7 @@ void WhosThere::onPendingOperation(PendingOperation* acc) {
     }
 }
 
+/* --------------------------------- Connection ---------------------------------*/
 void WhosThere::onAccountConnectionChanged(const ConnectionPtr &conn)
 {
     if (conn) {
@@ -204,6 +248,7 @@ void WhosThere::onConnectionStatusChanged(uint status) {
     }
 }
 
+/* --------------------------------- ContactManger ---------------------------------*/
 void WhosThere::onContactManagerStateChanged(ContactListState state)
 {
     qDebug() << "WhosThere::onContactManagerStateChanged " << state;
@@ -215,58 +260,81 @@ void WhosThere::onContactManagerStateChanged(ContactListState state)
     }
 }
 
+/* --------------------------------- SimpleTextObserver ---------------------------------*/
+void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel) {
+    qDebug() << "WhosThere::onMessageReceived isDeliveryReport: " << message.isDeliveryReport()
+             << " text: " << message.text()
+             << " sender: " << message.sender()->id();
+
+    if(message.isDeliveryReport()) {
+        ReceivedMessage::DeliveryDetails details = message.deliveryDetails();
+        if(! details.hasOriginalToken() ) {
+            qWarning() << "WhosThere::onMessageReceived: does not have original token";
+            return;
+        }
+        QString jid = message.sender()->id();
+        QString msgId = details.originalToken();
+        if(details.status() == DeliveryStatusAccepted)
+            emit messageSent(jid, msgId);
+        else if(details.status() == DeliveryStatusDelivered )
+            emit messageDelivered(jid, msgId);
+        else
+            qWarning() << "WhosThere::onMessageReceived: cannot handle delivery status " << details.status();
+
+    } else {
+
+        QVariantMap data;
+
+        data["type"] = "message";
+        data["content"] = message.text();
+        data["jid"] = message.sender()->id();
+        if(message.header().contains("message-token"))
+            data["msgId"] = message.header()["message-token"].variant();
+        else {
+            qWarning() << "message does not have message-token field!";
+            return;
+        }
+        if(message.header().contains("message-received"))
+            data["timestamp"] = message.header()["message-received"].variant();
+        data["incoming"] = 1;
+
+        emit newMessage(data);
+    }
+}
+
+void WhosThere::onMessageSent ( const Tp::Message& message,
+                                Tp::MessageSendingFlags /*flags*/,
+                                const QString& msgId,
+                                const Tp::TextChannelPtr& channel) {
+
+    QVariantMap data;
+    data["type"] = "message";
+    data["content"] = message.text();
+    data["jid"] = channel->targetId();
+    data["msgId"] = msgId;
+    if(message.header().contains("message-sent"))
+        data["timestamp"] = message.header()["message-sent"].variant();
+    data["incoming"] = 0;
+
+    emit newMessage(data);
+}
+
 void WhosThere::message_send(QString jid, QByteArray message)
 {
-    ContactMessengerPtr contactMessenger = ContactMessenger::create(mAccount, jid);
-    if(!contactMessenger) {
-        qDebug() << "WhosThere::message_send: contactMessenger = NULL";
-        return;
+    static ContactMessengerPtr contactMessenger;
+
+    if(contactMessenger.isNull() || contactMessenger->contactIdentifier() != jid) {
+        qDebug() << "WhosThere::message_send: creating new ContactMessenger";
+        contactMessenger = ContactMessenger::create(mAccount,jid);
+        if(contactMessenger.isNull()) {
+            qWarning() << "WhosThere::message_send: contactMessenger = NULL";
+            return;
+        }
     }
     contactMessenger->sendMessage(message);
 }
 
-void WhosThere::set_account(const QString& phonenumber, const QString& password)
-{
-    QVariantMap parameters;
-    if(phonenumber.length() > 0)
-        parameters.insert( "account", QVariant(phonenumber));
-    if(password.length() > 0)
-        parameters.insert( "password", QVariant(password));
-
-    if(mAccount.isNull()) {
-        if(phonenumber.length() == 0 || password.length() == 0) {
-            qWarning() << "WhosThere::set_account: phonenumber.length() == 0 || password.length() == 0";
-            return;
-        }
-        QVariantMap properties;
-        properties.insert( "org.freedesktop.Telepathy.Account.Enabled", true );
-        PendingAccount* acc = mAM->createAccount("whosthere", "whatsapp", "WhatApp Account", parameters, properties);
-
-        connect(acc, &PendingAccount::finished,
-                this, &WhosThere::onAccountCreateFinished );
-    } else {
-        PendingStringList* sl = mAccount->updateParameters(parameters, QStringList());
-        connect(sl, &Tp::PendingStringList::finished,
-                this, &WhosThere::onPendingOperation);
-    }
-}
-
-void WhosThere::connectAccount() {
-    if(!mAccount.isNull())
-        mAccount->setRequestedPresence(Presence::available());
-}
-
-void WhosThere::removeAccount() {
-    if(!mAccount.isNull())
-        mAccount->remove();
-}
-
-void WhosThere::disconnect() {
-    if(!mAccount.isNull())
-        mAccount->setRequestedPresence(Presence::offline());
-}
-
-/*                                             Registration                                            */
+/* --------------------------------- Registration ---------------------------------*/
 void WhosThere::code_request(const QString& cc, const QString& phonenumber, const QString &uid, bool useText)
 {
     if(uid.length() != 32){
