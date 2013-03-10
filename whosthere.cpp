@@ -50,16 +50,14 @@ WhosThere::WhosThere(QQuickItem *parent) :
         Account::FeatureCore);
 
     ConnectionFactoryPtr connectionFactory = ConnectionFactory::create(QDBusConnection::sessionBus(),
-                Connection::FeatureConnected /*| Connection::FeatureConnected |
-                Connection::FeatureRoster | Connection::FeatureRosterGroups*/);
+                Connection::FeatureConnected | Connection::FeatureRoster | Connection::FeatureSimplePresence);
 
     ChannelFactoryPtr channelFactory = ChannelFactory::create(QDBusConnection::sessionBus());
 
-    ContactFactoryPtr contactFactory = ContactFactory::create(Contact::FeatureAlias | Contact::FeatureSimplePresence);
+    ContactFactoryPtr contactFactory = ContactFactory::create(Contact::FeatureSimplePresence);
 
+/*
     mCR = ClientRegistrar::create(accountFactory, connectionFactory, channelFactory);
-
-    /*
     mHandler = TelepathyClient::create();
     QString handlerName(QLatin1String("WhosThereGui"));
     if (!mCR->registerClient(AbstractClientPtr::dynamicCast(mHandler), handlerName)) {
@@ -89,7 +87,7 @@ void WhosThere::onAMReady(Tp::PendingOperation *op)
         return;
     }
 
-    QList< AccountPtr >  accounts = mAM->accountsByProtocol("whatsapp")->accounts();
+    QList<AccountPtr> accounts = mAM->accountsByProtocol("whatsapp")->accounts();
     qDebug() << "number of accounts: " << accounts.size();
     if(accounts.size() == 0) {
         qDebug() << "Creating new account";
@@ -253,10 +251,22 @@ void WhosThere::onContactManagerStateChanged(ContactListState state)
 {
     qDebug() << "WhosThere::onContactManagerStateChanged " << state;
     if (state == ContactListStateSuccess) {
+        connect(mConn->contactManager().data(), &ContactManager::allKnownContactsChanged,
+                this, &WhosThere::onContactsChanged);
         qDebug() << "Loading contacts";
         foreach (const ContactPtr &contact, mConn->contactManager()->allKnownContacts()) {
-            qDebug() << "Contact id: " << contact->id();
+            emit newContact(contact->id());
         }
+    }
+}
+
+void WhosThere::onContactsChanged(const Tp::Contacts &  	contactsAdded,
+                                  const Tp::Contacts &  	contactsRemoved,
+                                  const Tp::Channel::GroupMemberChangeDetails &  	details)
+{
+    qDebug() << "WhosThere::onContactsChanged";
+    foreach (const ContactPtr &contact, contactsAdded) {
+        emit newContact(contact->id());
     }
 }
 

@@ -78,6 +78,9 @@ private:
     void onConnectionStatusChanged(uint status);
     void onAccountInvalidated();
 
+    void onContactsChanged(const Tp::Contacts &  	contactsAdded,
+                                      const Tp::Contacts &  	contactsRemoved,
+                                      const Tp::Channel::GroupMemberChangeDetails &  	details);
 public slots:
     void connectAccount();
 
@@ -105,6 +108,7 @@ signals:
     void messageSent(QString jid, QString msgId);
     void messageDelivered(QString jid, QString msgId);
 
+    void newContact(QString jid);
  /*
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);

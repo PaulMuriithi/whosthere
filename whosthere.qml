@@ -32,7 +32,7 @@ MainView {
     Component.onCompleted: {
         Util.log("Component.onCompleted");
         pagestack.push(page_contacts);
-        DB.loadMessages();
+        DB.updateContacts();
     }
 
     PageStack {
@@ -262,8 +262,8 @@ MainView {
                 anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
-                    text: jid + " ( time: " + timestamp + " )"
-                    subText: i18n.tr("Last message: ") + content
+                    text: jid + " ( time: " + lastTime + " )"
+                    subText: i18n.tr("Last message: ") + lastMsg
                     MouseArea {
                         anchors.fill: parent
                         onClicked: DB.showConversation(jid);
@@ -378,9 +378,6 @@ MainView {
             }
         }
     }
-    ListModel {
-        id: allMessages
-    }
     WhosThere {
         id: whosthere
 
@@ -425,18 +422,22 @@ MainView {
         }
         onNewMessage: {
             DB.addMessage(data);
-            DB.updateMessages();
         }
 
         onMessageDelivered: {
             console.log("OnReceipt_messageDelivered: " + jid + " " + msgId);
             DB.setDelivered(jid,msgId);
-            DB.loadMessages();
         }
         onMessageSent: {
             console.log("OnReceipt_messageSent: " + jid + " " + msgId);
             DB.setSent(jid,msgId);
-            DB.loadMessages();
+        }
+        onNewContact: {
+            Util.log("onNewContact "+ jid);
+            if(!DB.hasContact(jid)) {
+                DB.addContact(jid);
+                DB.updateContacts();
+            }
         }
 
         /* Registration */

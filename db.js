@@ -20,33 +20,52 @@ var db = openDB();
 
 function showConversation(jid) {
     page_conversation.jid = jid;
-    updateMessages();
+    loadConversation();
     pagestack.push(page_conversation);
 }
 
-function getMessage(jid, msgId) {
-    for(var i=0;i<allMessages.count;++i)
-        if(allMessages.get(i).jid === jid && allMessages.get(i).msgId === msgId)
-            return allMessages.get(i);
-    return undefined;
+function updateContacts() {
+    contactsModel.clear();
+    var contacts = [];
+    db.transaction(
+                function(tx) {
+                    var rs = tx.executeSql("SELECT ct.jid, ct.pushName, ct.alias, ct.avatar, lastmsg.content, lastmsg.lastTime FROM Contacts ct, (SELECT max(timestamp) as lastTime, content, jid FROM Messages WHERE type = 'message' GROUP BY jid) lastmsg WHERE ct.jid = lastmsg.jid");
+                    console.log("updateContacts results: " + rs.rows.length)
+                        for(var i=0;i < rs.rows.length; ++i) {
+                            for(var j in rs.rows.item(i))
+                                console.log("Item: " + j + " = " + rs.rows.item(i)[j])
+                            contacts.push({   "jid":      '' + rs.rows.item(i).jid,
+                                              "pushName": '' + rs.rows.item(i).pushName,
+                                              "alias":    '' + rs.rows.item(i).alias,
+                                              "avatar":   '' + rs.rows.item(i).avatar,
+                                              "lastMsg":   '' + rs.rows.item(i).content,
+                                              "lastTime":   '' + rs.rows.item(i).lastTime,
+                                               });
+                        }
+
+                });
+
+
+    for(var i in contacts)
+        contactsModel.append(contacts[i]);
 }
 
-//allMessages list has been changed, propagate
-function updateMessages() {
-    console.log("updateMessages");
-    conversationMessages.clear();
+function addContact(jid) {
+    db.transaction(
+                function(tx) {
+                    tx.executeSql('INSERT INTO Contacts (jid) VALUES(?)', jid);
+                });
+}
 
-    var contacts = [];
-    var i;
-    for(i=0;i<allMessages.count;++i) {
-        if(allMessages.get(i).jid === page_conversation.jid)
-            conversationMessages.append(allMessages.get(i));
-        contacts[allMessages.get(i).jid] = allMessages.get(i);
-    }
-
-    contactsModel.clear();
-    for(i in contacts)
-        contactsModel.append(contacts[i]);
+function hasContact(jid) {
+    var has;
+    db.readTransaction(
+                function(tx) {
+                    var rs = tx.executeSql('SELECT jid FROM Contacts WHERE jid = ?', jid);
+                    has = (rs.rows.length > 0);
+                }
+                );
+    return has;
 }
 
 function openDB() {
@@ -55,15 +74,16 @@ function openDB() {
             function(db) {
                 db.transaction(
                     function(tx) {
-                        tx.executeSql('CREATE TABLE Credentials(username TEXT, password TEXT, uid TEXT, valid INT)');
-                        tx.executeSql("INSERT INTO Credentials (username, password, uid, valid) VALUES('','','',0)");
+                        tx.executeSql('CREATE TABLE Credentials(uid TEXT)');
+                        tx.executeSql("INSERT INTO Credentials (uid) VALUES('')");
                         tx.executeSql("CREATE TABLE Messages(type TEXT NOT NULL, jid TEXT NOT NULL, msgId TEXT UNIQUE NOT NULL, "
                                      +"content TEXT DEFAULT '', preview BLOB DEFAULT '', url TEXT DEFAULT '', "
                                      +"size INT DEFAULT 0, timestamp TIMESTAMP DEFAULT 0, incoming INT DEFAULT 0, "
                                      +"sent INT DEFAULT 0, delivered INT DEFAULT 0, "
                                      +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0)");
+                        tx.executeSql("CREATE TABLE Contacts (jid TEXT UNIQUE NOT NULL, pushName TEXT NOT NULL DEFAULT '', alias TEXT NOT NULL DEFAULT '', avatar BLOB)");
                     });
-                db.changeVersion("","6");
+                db.changeVersion("","7");
             });
     if(db.version == "") //changeVersion did not take effect yet
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
@@ -125,21 +145,33 @@ function openDB() {
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
         console.log("Now at version " + db.version);
     }
+    if(db.version == "6") {
+        console.log("Updating db to version 7");
+        db.changeVersion("6","7", function(tx) {
+            tx.executeSql("CREATE TABLE Contacts (jid TEXT UNIQUE NOT NULL, pushName TEXT NOT NULL DEFAULT '', alias TEXT NOT NULL DEFAULT '', avatar BLOB)");
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
+
     return db;
 }
 
-function loadMessages() {
+function loadConversation() {
     console.log("loadMessages");
 
-    allMessages.clear();
+    if(!page_conversation.jid)
+        return;
+
+    conversationMessages.clear();
     db.transaction(
                 function(tx) {
-                        var rs = tx.executeSql('SELECT * FROM Messages');
-                        //We cannot just do allMessages.append(rs.rows.item(i)), because
+                        var rs = tx.executeSql('SELECT * FROM Messages WHERE jid=?',page_conversation.jid);
+                        //We cannot just do conversationMessages.append(rs.rows.item(i)), because
                         //sqlite does not keep our dataytypes
                         for(var i=0;i < rs.rows.length; ++i) {
                             //Don't use bool here, support for that is broken in ListModel
-                            allMessages.append({   "type":      '' + rs.rows.item(i).type,
+                            conversationMessages.append({   "type":      '' + rs.rows.item(i).type,
                                                    "jid":       '' + rs.rows.item(i).jid,
                                                    "msgId":     '' + rs.rows.item(i).msgId,
                                                    "content":   '' + rs.rows.item(i).content,
@@ -156,11 +188,9 @@ function loadMessages() {
                         }
 
                 });
-    updateMessages();
 }
 
 function addMessage(msg) {
-    allMessages.append(msg);
 
     // 1:1 mapping of keys and values of msg to columns and values in SQL
     db.transaction(
@@ -180,6 +210,9 @@ function addMessage(msg) {
                     }
                     tx.executeSql('INSERT INTO Messages (' + columns + ') VALUES(' + valuesp + ')', values);
                 })
+    loadConversation();
+    //This will change the last received message
+    updateContacts();
 }
 
 //Sets the delivered column to true
@@ -188,6 +221,7 @@ function setDelivered(jid,msgId) {
                 function(tx) {
                     tx.executeSql('UPDATE Messages SET "delivered"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
                 });
+    loadConversation();
 }
 
 //Sets the sent column to true
@@ -196,6 +230,7 @@ function setSent(jid,msgId) {
                 function(tx) {
                     tx.executeSql('UPDATE Messages SET "sent"=1 WHERE jid = ? AND msgId = ?', [jid, msgId] );
                 });
+    loadConversation();
 }
 
 function createUID() {
