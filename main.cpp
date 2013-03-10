@@ -34,7 +34,7 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 
     Tp::registerTypes();
-    Tp::enableDebug(true);
+    //Tp::enableDebug(true);
     Tp::enableWarnings(true);
 
     qmlRegisterType<WhosThere>("WhosThere", 1,0, "WhosThere");

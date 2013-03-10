@@ -28,12 +28,6 @@ MainView {
     id: root
     width: units.gu(42)
     height: units.gu(67)
-    //anchors.centerIn: parent
-    //anchors.fill: parent
-    //color: "lightgray"
-    Component.onDestruction: {
-        whosthere.disconnect("");
-    }
 
     Component.onCompleted: {
         Util.log("Component.onCompleted");
@@ -66,12 +60,6 @@ MainView {
             visible: false
             title: i18n.tr("Login/Register")
             anchors.fill: parent
-            onVisibleChanged: {
-                if(visible) {
-                    username_txt.text = DB.getUsername();
-                    password_txt.text = DB.getPassword();
-                }
-            }
             Column {
                 anchors.fill: parent
                 Label {
@@ -99,44 +87,35 @@ MainView {
                     width: parent.width; height: units.gu(4)
                 }
                 Row {
+                    Label {
+                        text: i18n.tr("Enabled: ")
+                    }
+                    CheckBox {
+                        id: accountEnabled_chk
+                        onClicked: {
+                            whosthere.enableAccount( checked );
+                        }
+                    }
+                }
+                Row {
                     Button {
                         anchors.margins: units.gu(1)
                         id: login_btn
-                        text: i18n.tr("Log in")
+                        text: i18n.tr("Save")
                         onClicked: {
                             if( username_txt.text == "" || password_txt.text == "")
                                 return;
 
-                            whosthere.login(username_txt.text, password_txt.text);
-                            DB.setUsername(username_txt.text);
-                            DB.setPassword(password_txt.text);
+                            whosthere.set_account(username_txt.text, password_txt.text);
                         }
                     }
                     Button {
+                        id: removeAccount_btn
                         anchors.margins: units.gu(1)
-                        text: i18n.tr("Demo")
+                        width: units.gu(20)
+                        text: i18n.tr("Remove")
                         onClicked: {
-                            allMessages.append({ "type": "message", "content": "Hi there",
-                                                   "jid": "155556778317@s.whatsapp.net", "msgId": "1", "timestamp": 0,
-                                                   "incoming": 1, "sent": 0, "delivered": 0});
-                            allMessages.append({ "type": "message", "content": "How are you doing?",
-                                                   "jid": "155556778317@s.whatsapp.net", "msgId": "2", "timestamp": 2,
-                                                   "incoming": 1, "sent": 0, "delivered": 0});
-                            allMessages.append({ "type": "message", "content": "Everything alright?",
-                                                   "jid": "155556778317@s.whatsapp.net", "msgId": "3", "timestamp": 17,
-                                                   "incoming": 0, "sent": 1, "delivered": 0});
-
-                            allMessages.append({ "type": "message", "content": "Hello!",
-                                                   "jid": "155556777777@s.whatsapp.net", "msgId": "1", "timestamp": 0,
-                                                   "incoming": 1, "sent": 0, "delivered": 0});
-                            allMessages.append({ "type": "message", "content": "I'm sending a text",
-                                                   "jid": "155556777777@s.whatsapp.net", "msgId": "2", "timestamp": 2,
-                                                   "incoming": 1, "sent": 0, "delivered": 0});
-                            allMessages.append({ "type": "message", "content": ".. and I'm answering",
-                                                   "jid": "155556777777@s.whatsapp.net", "msgId": "3", "timestamp": 17,
-                                                   "incoming": 0, "sent": 0, "delivered": 0});
-                            DB.updateMessages();
-                            pagestack.push(page_contacts);
+                            whosthere.remove_account();
                         }
                     }
                 }
@@ -178,9 +157,6 @@ MainView {
                             return;
                         console.log("onClicked: call code_request");
                         whosthere.code_request(countrycode_txt.text, username_reg_txt.text, DB.getUID(), true);
-                        DB.setUsername(countrycode_txt.text+username_reg_txt.text);
-                        //requesting the code invalidates the old password
-                        DB.setPassword('');
                     }
                 }
                 TextField {
@@ -201,7 +177,7 @@ MainView {
                         //Remove hyphon if it exists
                         var code = code_txt.text.replace('-','');
 
-                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, code, DB.getUID());
+                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, DB.getUID(), code);
                     }
                 }
 
@@ -210,6 +186,14 @@ MainView {
                     text: i18n.tr("By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>");
                     onLinkActivated: Qt.openUrlExternally(link)
                     wrapMode: Text.WordWrap
+                }
+            }
+            tools: ToolbarActions {
+                Action {
+                    text: "back"
+                    onTriggered: {
+                        pagestack.push(page_contacts);
+                    }
                 }
             }
         }
@@ -231,6 +215,16 @@ MainView {
                     }
                 },
                 State {
+                    name: "connecting"
+                    PropertyChanges {
+                        target: online_status_lbl
+                        text: i18n.tr("connecting")
+                    }
+                    StateChangeScript {
+                        script: { Util.log("State changed to connecting") }
+                    }
+                },
+                State {
                     name: "disconnected"
                     PropertyChanges {
                         target: online_status_lbl
@@ -245,6 +239,13 @@ MainView {
             Label {
                 id: online_status_lbl
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: units.gu(2) }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        if(page_contacts.state == "disconnected")
+                            whosthere.connectAccount();
+                    }
+                }
             }
             Label {
                 anchors { left: parent.left; right: parent.right; top: online_status_lbl.bottom; margins: units.gu(4) }
@@ -269,7 +270,7 @@ MainView {
             }
             tools: ToolbarActions {
                 Action {
-                    text: "Logout"
+                    text: "Settings"
                     onTriggered: {
                         pagestack.push(page_login);
                     }
@@ -381,25 +382,46 @@ MainView {
     WhosThere {
         id: whosthere
 
-        /* Init/Error */
-        onAuth_success: {
-            Util.log("onAuth_success " + username);
-            DB.setCredentialsValid(true);
+        onAccountOk: {
+            Util.log("onAccountOk");
+            removeAccount_btn.enabled = true;
             if(pagestack.currentPage == page_login || pagestack.currentPage == page_loading)
                 pagestack.push(page_contacts);
-            page_contacts.state = "connected";
         }
-        onAuth_fail: {
-            console.log("auth fail for " + username + ", reason: " + reason);
-
-            if(reason != "invalid") {
-                /* reason in "invalid", when we provide wrong credentials.
-                  I wonder what else reason could be. */
-                console.log("onAuth_fail: Unhandled reason: " + reason)
-            }
-            DB.setCredentialsValid(false);
+        onNoAccount: {
+            Util.log("onNoAccount");
+            removeAccount_btn.enabled = false;
+            accountEnabled_chk.checked = true;
             pagestack.push(page_login);
         }
+        onConnectionStatusChanged: {
+            Util.log("onConnectionStatusChanged " + status);
+            page_contacts.state = status;
+        }
+
+        onAccountEnabledChanged: {
+            Util.log("onAccountEnabledChanged " + enabled);
+            accountEnabled_chk.checked = enabled;
+            if(!enabled)
+                pagestack.push(page_login);
+        }
+
+        onAccountValidityChanged: {
+            Util.log("onAccountValidityChanged " + valid);
+            if(!valid) {
+                //TODO: remove parameters
+                pagestack.push(page_login);
+            }
+        }
+
+        onAccountParametersChanged: {
+            Util.log("onAccountParametersChanged " + parameters);
+            if(parameters["password"])
+                password_txt.text = parameters["password"];
+            if(parameters["account"])
+                username_txt.text = parameters["account"];
+        }
+
         onMessage_error: {
             console.log("onMessage_error " + msgId + " jid: " + jid + " errorCode: "+ errorCode);
         }
@@ -407,23 +429,6 @@ MainView {
             Util.log("OnDisconnected: " + reason);
             if(reason != "dbus_setup")
                 page_contacts.state = "disconnected";
-        }
-        onDbus_fail: {
-            Util.log("onDbus_fail " + reason);
-        }
-        onDbus_connected: {
-            Util.log("onDbus_connected");
-            var valid = DB.getCredentialsValid();
-            var username = DB.getUsername();
-            var password = DB.getPassword();
-
-            if(hasValidCredentials()) {
-                pagestack.push(page_contacts);
-                Util.log("Autologin with username " + username + " and password " + password);
-                login(username, password);
-            } else {
-                pagestack.push(page_login);
-            }
         }
         /* Messaging */
         onAudio_received: {
@@ -487,51 +492,45 @@ MainView {
             DB.loadMessages();
         }
         onReceipt_visible: {
-            console.log("OnReceipt_visible: " + jid + " " + msgId);
+            Util.log("OnReceipt_visible: " + jid + " " + msgId);
         }
         onStatus_dirty: {
-            console.log("OnStatus_dirty");
+            Util.log("OnStatus_dirty");
         }
         onContact_gotProfilePicture: {
-            console.log("OnContact_gotProfilePicture: " + jid + " " + filename);
+            Util.log("OnContact_gotProfilePicture: " + jid + " " + filename);
         }
         onContact_gotProfilePictureId: {
-            console.log("OnContact_gotProfilePictureId: " + jid + " " + pictureId);
+            Util.log("OnContact_gotProfilePictureId: " + jid + " " + pictureId);
         }
         onContact_paused: {
-            console.log("OnReceipt_visible: " + jid);
+            Util.log("OnReceipt_visible: " + jid);
         }
         onContact_typing: {
-            console.log("OnContact_typing: " + jid);
+            Util.log("OnContact_typing: " + jid);
         }
-
         /* Registration */
         onCode_request_response: {
-            console.log("onCode_request_response: " + status + " " + reason);
-            if( status != 'send' ) {
+            Util.log("onCode_request_response: " + status );
+            if( status != 'sent' ) {
                 //TODO: some error has occured, look into reason
+                //possible reason: too_recent
             }
         }
         onCode_register_response: {
-            console.log("onCode_register_response: " + status + " " + reason);
+            Util.log("onCode_register_response: " + status);
             if(status == 'ok') {
-                DB.setPassword(pw);
-                password_txt.text = pw;
-                username_txt.text = countrycode_txt.text+username_reg_txt.text;
+                //password_txt.text = pw;
+                //username_txt.text = countrycode_txt.text+username_reg_txt.text;
+                set_account(countrycode_txt.text+username_reg_txt.text, pw);
             } else {
                 //TODO: error msg
             }
         }
+
     }
 
     function getPreviewImage(id) {
         return DB.getPreviewImage(id);
-    }
-
-    function hasValidCredentials() {
-        var valid = DB.getCredentialsValid();
-        var username = DB.getUsername();
-        var password = DB.getPassword();
-        return (valid && username && password);
     }
 }

@@ -35,6 +35,25 @@ class WhosThere : public QQuickItem
 public:
     explicit WhosThere(QQuickItem *parent = 0);
     ~WhosThere();
+
+    /*
+     * \param cc is the country code
+     * \param phoneNumber (without country code)
+     * \param uid some 32 byte lowercase hex
+     * \param useText true for text, false for call
+     * \param callback: will be called with status = 'sent', reason
+     */
+    static void requestCode(const QString& cc, const QString& phoneNumber,
+                            const QString& uid, bool useText, std::function<void(const QString &, const QString&)> callback);
+    /*
+     * \param cc is the country code
+     * \param phoneNumber (without country code)
+     * \param uid some 32 byte lowercase hex
+     * \param code Code you got via text, without hyphen (= 6 digits)
+     * \param callback: will be called with status = 'ok', pw = password in base64
+     */
+    static void registerCode(const QString& cc, const QString& phoneNumber,
+                             const QString& uid, const QString& code, std::function<void(const QString&,const QString&)> callback);
 private:
     AccountManagerPtr mAM;
     ConnectionManagerPtr cm;
@@ -43,32 +62,49 @@ private:
     ClientRegistrarPtr mCR;
     SharedPtr<TelepathyClient> mHandler;
     SimpleTextObserverPtr m_simpleTextObserver;
-public slots:
-    //void onCMReady(PendingOperation *op);
+
+    /* Telepathy */
     void onContactManagerStateChanged(ContactListState state);
     void onAMReady(PendingOperation *op);
     void onAccountFinished(PendingOperation* acc);
     void onAccountConnectionChanged(const ConnectionPtr &conn);
-    void onAccountSetEnabled(PendingOperation* acc);
+    void onPendingOperation(PendingOperation* op);
     void onAccountCreateFinished(PendingOperation* op);
     void onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
-    /* Misc */
-    void login(const QString& username, const QByteArray& password);
-    void disconnect(const QByteArray& reason);
+    void onConnectionStatusChanged(uint status);
+    void onAccountInvalidated();
 
-    void code_register(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &code, const QByteArray &identity);
-    void code_request(const QByteArray &countryCode, const QByteArray &phoneNumber, const QByteArray &identity, bool useText);
+public slots:
+    void connectAccount();
+
+    /* QML */
+    void enableAccount(bool enabled);
+    void removeAccount();
+    void set_account(const QString& phonenumber, const QString &password);
+    void disconnect();
+    void code_request(const QString& cc, const QString& phonenumber, const QString& uid, bool useText);
+    void code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code);
     void message_send(QString jid, QByteArray message);
 
 signals:
+    void noAccount();
+    void accountOk();
+    void connectionStatusChanged(QString status);
+    /* Emitted when the account is enabled/disabled */
+    void accountEnabledChanged(bool enabled);
+    void accountValidityChanged(bool valid);
+    void accountParametersChanged(QVariantMap parameters);
+    void code_request_response(const QString &status, const QString &reason);
+    void code_register_response(const QString &status, const QString &pw);
+
+
     void dbus_fail(const QString& reason);
     void dbus_connected();
     void message_send_completed(const QString &jid, const QString &message, const QString& msgId);
     void audio_received(const QString &msgId, const QString &jid, const QString &url, int size, bool wantsReceipt);
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);
-    void code_register_response(const QString &status, const QString &reason, const QString &pw);
-    void code_request_response(const QString &status, const QString &reason);
+
     void contact_gotProfilePicture(const QString &jid, const QString &filename);
     void contact_gotProfilePictureId(const QString &jid, const QString &pictureId);
     void contact_paused(const QString &jid);
