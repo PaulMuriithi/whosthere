@@ -454,18 +454,6 @@ void WhosThere::code_register(const QString& cc, const QString& phonenumber, con
                             });
 }
 
-QString makeToken(const QString& phoneNumber) {
-    /*return QCryptographicHash::hash(
-    (QLatin1String("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1354754753509") + phoneNumber).toLatin1(),
-                         QCryptographicHash::Md5).toHex();*/
-    return QCryptographicHash::hash(
-        (QLatin1String("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1359594496554") + phoneNumber).toLatin1(),
-                             QCryptographicHash::Md5).toHex();
-}
-
-//"WhatsApp/2.3.53 S40Version/14.26 Device/Nokia302"
-const QLatin1String UserAgent("WhatsApp/2.4.7 S40Version/14.26 Device/Nokia302");
-
 void WhosThere::requestCode(const QString& cc, const QString& phoneNumber,
                             const QString& uid, bool useText, std::function<void(const QString&, const QString&)> callback) {
     QUrlQuery urlQuery;
@@ -477,13 +465,16 @@ void WhosThere::requestCode(const QString& cc, const QString& phoneNumber,
     urlQuery.addQueryItem("mnc", "000");
     urlQuery.addQueryItem("method", useText ? "sms" : "voice");
     urlQuery.addQueryItem("id", uid);
-    urlQuery.addQueryItem("token", makeToken(phoneNumber));
+    QString token = QCryptographicHash::hash(
+                (QLatin1String("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1354754753509") + phoneNumber).toLatin1(),
+                                     QCryptographicHash::Md5).toHex();
+    urlQuery.addQueryItem("token", token);
 
     QUrl url("https://v.whatsapp.net/v2/code");
     url.setQuery(urlQuery);
 
     QNetworkRequest request;
-    request.setHeader(QNetworkRequest::UserAgentHeader, UserAgent);
+    request.setHeader(QNetworkRequest::UserAgentHeader, "WhatsApp/2.3.53 S40Version/14.26 Device/Nokia302");
     request.setRawHeader("Accept","text/json");
     request.setUrl(url);
     qDebug() << url;
@@ -522,13 +513,16 @@ void WhosThere::registerCode(const QString& cc, const QString& phoneNumber,
     urlQuery.addQueryItem("in", phoneNumber);
     urlQuery.addQueryItem("id", uid);
     urlQuery.addQueryItem("code", code);
-    urlQuery.addQueryItem("token", makeToken(phoneNumber));
+    QString token = QCryptographicHash::hash(
+                (QLatin1String("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1354754753509") + phoneNumber).toLatin1(),
+                                     QCryptographicHash::Md5).toHex();
+    urlQuery.addQueryItem("token", token);
 
     QUrl url("https://v.whatsapp.net/v2/register");
     url.setQuery(urlQuery);
 
     QNetworkRequest request;
-    request.setHeader(QNetworkRequest::UserAgentHeader, UserAgent);
+    request.setHeader(QNetworkRequest::UserAgentHeader, "WhatsApp/2.3.53 S40Version/14.26 Device/Nokia302");
     request.setRawHeader("Accept","text/json");
     request.setUrl(url);
     qDebug() << url;
