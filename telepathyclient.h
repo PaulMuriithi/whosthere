@@ -9,6 +9,7 @@
 #include <TelepathyQt/ChannelClassSpecList>
 #include <TelepathyQt/IncomingFileTransferChannel>
 #include <TelepathyQt/PendingOperation>
+#include <TelepathyQt/TextChannel>
 
 using namespace Tp;
 
@@ -32,7 +33,12 @@ public:
             const QList<ChannelRequestPtr> &requestsSatisfied,
             const QDateTime &userActionTime,
             const HandlerInfo &handlerInfo);
-
+signals:
+    void messageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
+    void messageSent (const Tp::Message& message,
+                                    Tp::MessageSendingFlags flags,
+                                    const QString& msgId,
+                                    const Tp::TextChannelPtr& channel);
 private Q_SLOTS:
 
 private:

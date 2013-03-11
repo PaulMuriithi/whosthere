@@ -1,5 +1,7 @@
 #include "telepathyclient.h"
 
+#include <TelepathyQt/Message>
+
 TelepathyClient::TelepathyClient()
     : QObject(),
           AbstractClientHandler(ChannelClassSpecList() << ChannelClassSpec::textChat()
@@ -33,17 +35,21 @@ void TelepathyClient::handleChannels(const MethodInvocationContextPtr<> &context
         return;
     }
 
-    // We should always receive incoming channels of type FileTransfer, as set by our filter,
-    // otherwise either MC or tp-qt itself is bogus, so let's assert in case they are
-    qDebug() << "handleChannels: channelId " << chan->targetId();
-    ContactPtr contact = chan->targetContact();
-    qDebug() << "handleChannels: contactID " << contact->id();
-    /*Q_ASSERT(chan->channelType() == TP_QT_IFACE_CHANNEL_TYPE_FILE_TRANSFER);
-    Q_ASSERT(!chan->isRequested());
-
-    IncomingFileTransferChannelPtr transferChannel = IncomingFileTransferChannelPtr::qObjectCast(chan);
-    Q_ASSERT(transferChannel);*/
-
+    //ContactPtr contact = chan->targetContact();
+    //QString jid = contact->id();
+    //qDebug() << "handleChannels: contactID " << jid;
+    /*if(chan->channelType() != TP_QT_IFACE_CHANNEL_TYPE_TEXT)
+        return;
+    */
+    TextChannelPtr textChannel = TextChannelPtr::qObjectCast(chan);
+    connect(textChannel.data(), &TextChannel::messageReceived,
+            [this, textChannel](const ReceivedMessage& r) {
+                emit messageReceived(r, textChannel);
+        });
+    connect(textChannel.data(), &TextChannel::messageSent,
+            [this, textChannel](const Tp::Message& message, Tp::MessageSendingFlags flags, const QString& msgId) {
+                emit messageSent(message, flags, msgId, textChannel);
+        });
     context->setFinished();
 
     /*PendingFileReceive *receiveOperation = new PendingFileReceive(transferChannel,

@@ -21,3 +21,13 @@
 function log(msg) {
     console.log( "[" +  Qt.formatTime(new Date(), "hh:mm:ss.zzz") + "] " + msg);
 }
+
+// unixtime is seconds since epoch
+function formatTime(unixtime) {
+    var date = new Date(unixtime*1000)
+    var now = new Date();
+    if(Qt.formatDateTime(date, "dd.MM.yyyy") == Qt.formatDateTime(now, "dd.MM.yyyy"))
+        return Qt.formatTime(date, "hh:mm");
+    else
+        return Qt.formatDateTime(date, "dd. MMM");
+}

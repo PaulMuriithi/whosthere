@@ -18,10 +18,16 @@
 
 var db = openDB();
 
+var presences = new Object;
+
 function showConversation(jid) {
     page_conversation.jid = jid;
     loadConversation();
     pagestack.push(page_conversation);
+}
+
+function displayName(jid) {
+    return "+" + jid.replace(/@s\.whatsapp\.net/, "");
 }
 
 function updateContacts() {
@@ -46,8 +52,15 @@ function updateContacts() {
                 });
 
 
-    for(var i in contacts)
+    for(var i in contacts) {
+        if( contacts[i]["jid"] in presences ) {
+            contacts[i]["presence"] = presences[contacts[i]["jid"]];
+        } else {
+            contacts[i]["presence"] = "";
+        }
+
         contactsModel.append(contacts[i]);
+    }
 }
 
 function addContact(jid) {

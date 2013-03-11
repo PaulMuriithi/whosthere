@@ -75,12 +75,14 @@ private:
                                     Tp::MessageSendingFlags flags,
                                     const QString& msgId,
                                     const Tp::TextChannelPtr& channel);
+    void onMessageSent2( const Tp::Message& message, const QString& msgId, const QString& jid);
     void onConnectionStatusChanged(uint status);
     void onAccountInvalidated();
 
     void onContactsChanged(const Tp::Contacts &  	contactsAdded,
                                       const Tp::Contacts &  	contactsRemoved,
                                       const Tp::Channel::GroupMemberChangeDetails &  	details);
+    void onNewContacts(const Tp::Contacts& contacts);
 public slots:
     void connectAccount();
 
@@ -109,6 +111,7 @@ signals:
     void messageDelivered(QString jid, QString msgId);
 
     void newContact(QString jid);
+    void presenceChanged(QString jid, QString presence);
  /*
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);

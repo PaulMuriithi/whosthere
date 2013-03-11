@@ -262,7 +262,8 @@ MainView {
                 anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
-                    text: jid + " ( time: " + lastTime + " )"
+                    text: DB.displayName(jid) + (presence ? " (" + presence + ")" : "")
+                          //" ( time: " + lastTime + " )"
                     subText: i18n.tr("Last message: ") + lastMsg
                     MouseArea {
                         anchors.fill: parent
@@ -285,7 +286,7 @@ MainView {
             id: page_conversation
             visible: false
             anchors.fill: parent
-            title: i18n.tr("Conversation with " + jid)
+            title: i18n.tr("Conversation with " + DB.displayName(jid))
             Button {
                 id: back_btn
                 text: i18n.tr("Back")
@@ -344,7 +345,7 @@ MainView {
                                 text: type == "message" ? content : type
                             }
                             Label { //Status
-                                text: (timestamp ? (new Date(timestamp*1000) + " ") : "" )
+                                text: (timestamp ? (Util.formatTime(timestamp) + " ") : "" )
                                       +  (sent ? "sent " : "") + (delivered ? "delivered" : "")
                                 font.italic: true
                                 font.pointSize: 6
@@ -438,6 +439,11 @@ MainView {
                 DB.addContact(jid);
                 DB.updateContacts();
             }
+        }
+        onPresenceChanged: {
+            Util.log("onPresenceChanged: " + jid + " " + presence);
+            DB.presences[jid] = presence;
+            DB.updateContacts();
         }
 
         /* Registration */

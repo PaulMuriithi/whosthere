@@ -32,12 +32,16 @@
 #include <TelepathyQt/AccountFactory>
 #include <TelepathyQt/PendingReady>
 #include <TelepathyQt/PendingAccount>
+#include <TelepathyQt/PendingChannel>
 #include <TelepathyQt/PendingStringList>
+#include <TelepathyQt/PendingSendMessage>
 #include <TelepathyQt/ContactMessenger>
 #include <TelepathyQt/TextChannel>
 
 #include "whosthere.h"
 #include "telepathyclient.h"
+
+// #define USE_CLIENT
 
 using namespace std;
 
@@ -56,15 +60,21 @@ WhosThere::WhosThere(QQuickItem *parent) :
 
     ContactFactoryPtr contactFactory = ContactFactory::create(Contact::FeatureSimplePresence);
 
-/*
+#ifdef USE_CLIENT
+    /* TelepathyClient */
     mCR = ClientRegistrar::create(accountFactory, connectionFactory, channelFactory);
     mHandler = TelepathyClient::create();
     QString handlerName(QLatin1String("WhosThereGui"));
     if (!mCR->registerClient(AbstractClientPtr::dynamicCast(mHandler), handlerName)) {
         qWarning() << "Unable to register incoming file transfer handler, aborting";
     }
-*/
+    connect(mHandler.data(), &TelepathyClient::messageReceived,
+            this, &WhosThere::onMessageReceived);
+    connect(mHandler.data(), &TelepathyClient::messageSent,
+            this, &WhosThere::onMessageSent);
+#endif
 
+    /* AccountManager */
     mAM = Tp::AccountManager::create(accountFactory, connectionFactory, channelFactory, contactFactory);
     qDebug() << "Waiting for account manager";
     connect(mAM->becomeReady(), &PendingOperation::finished,
@@ -183,11 +193,13 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
              this, &WhosThere::accountParametersChanged);
     accountParametersChanged( mAccount->parameters() );
 
+#ifndef USE_CLIENT
     m_simpleTextObserver = SimpleTextObserver::create(mAccount);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageReceived,
             this, &WhosThere::onMessageReceived);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageSent,
             this, &WhosThere::onMessageSent);
+#endif
 
     connect(mAccount.data(), &Account::connectionChanged,
             this, &WhosThere::onAccountConnectionChanged);
@@ -254,19 +266,29 @@ void WhosThere::onContactManagerStateChanged(ContactListState state)
         connect(mConn->contactManager().data(), &ContactManager::allKnownContactsChanged,
                 this, &WhosThere::onContactsChanged);
         qDebug() << "Loading contacts";
-        foreach (const ContactPtr &contact, mConn->contactManager()->allKnownContacts()) {
-            emit newContact(contact->id());
-        }
+        onNewContacts(mConn->contactManager()->allKnownContacts());
     }
 }
 
 void WhosThere::onContactsChanged(const Tp::Contacts &  	contactsAdded,
                                   const Tp::Contacts &  	contactsRemoved,
-                                  const Tp::Channel::GroupMemberChangeDetails &  	details)
-{
+                                  const Tp::Channel::GroupMemberChangeDetails &  	details) {
+
     qDebug() << "WhosThere::onContactsChanged";
-    foreach (const ContactPtr &contact, contactsAdded) {
-        emit newContact(contact->id());
+    onNewContacts(contactsAdded);
+}
+
+void WhosThere::onNewContacts(const Tp::Contacts& contacts) {
+
+    foreach (const ContactPtr &contact, contacts) {
+        QString jid = contact->id();
+        emit newContact(jid);
+        emit presenceChanged(jid, contact->presence().status());
+
+        connect(contact.data(), &Contact::presenceChanged,
+                [this,jid](const Tp::Presence& presence) {
+                        emit presenceChanged(jid, presence.status());
+                });
     }
 }
 
@@ -317,13 +339,24 @@ void WhosThere::onMessageSent ( const Tp::Message& message,
                                 const QString& msgId,
                                 const Tp::TextChannelPtr& channel) {
 
+    onMessageSent2(message, msgId, channel->targetId());
+}
+
+void WhosThere::onMessageSent2 ( const Tp::Message& message,
+                                const QString& msgId,
+                                const QString& jid) {
+
     QVariantMap data;
     data["type"] = "message";
     data["content"] = message.text();
-    data["jid"] = channel->targetId();
+    data["jid"] = jid;
     data["msgId"] = msgId;
     if(message.header().contains("message-sent"))
         data["timestamp"] = message.header()["message-sent"].variant();
+    else {
+        qWarning() << "No timestamp in sent message, fix CM!";
+        data["timestamp"] = QDateTime::currentMSecsSinceEpoch()/1000;
+    }
     data["incoming"] = 0;
 
     emit newMessage(data);
@@ -331,6 +364,35 @@ void WhosThere::onMessageSent ( const Tp::Message& message,
 
 void WhosThere::message_send(QString jid, QByteArray message)
 {
+#if 0
+    connect(mAccount->ensureAndHandleTextChat(jid), &PendingChannel::finished,
+            [this,message](PendingOperation* op) {
+        if (op->isError()) {
+            qWarning() << "ensureChannel failed: " <<
+                op->errorName() << ": " << op->errorMessage();
+            return;
+        }
+        TextChannelPtr channel = TextChannelPtr::dynamicCast((dynamic_cast<PendingChannel*>(op))->channel());
+        MessagePartList partList;
+        MessagePart header, body;
+        header["message-type"]          = QDBusVariant(ChannelTextMessageTypeNormal);
+        body["content-type"]            = QDBusVariant("text/plain");
+        body["content"]                 = QDBusVariant(message);
+        partList << header << body;
+        connect(channel->send(partList), &PendingSendMessage::finished,
+                [](PendingOperation* op) {
+                    if (op->isError()) {
+                        qWarning() << "channel->send failed: " <<
+                        op->errorName() << ": " << op->errorMessage();
+                        return;
+                    }
+                    op->deleteLater();
+                });
+        //op->deleteLater();
+    });
+
+#else
+    //This does not work on newly created channels
     static ContactMessengerPtr contactMessenger;
 
     if(contactMessenger.isNull() || contactMessenger->contactIdentifier() != jid) {
@@ -341,7 +403,22 @@ void WhosThere::message_send(QString jid, QByteArray message)
             return;
         }
     }
+#if 1
     contactMessenger->sendMessage(message);
+#else
+    connect(contactMessenger->sendMessage(message), &PendingOperation::finished,
+            [this, jid](PendingOperation* op) {
+                if (op->isError()) {
+                    qWarning() << "ontactMessenger->sendMessage() failed: " <<
+                    op->errorName() << ": " << op->errorMessage();
+                    return;
+                }
+                PendingSendMessage* sendMessage = dynamic_cast<PendingSendMessage*>(op);
+                onMessageSent2(sendMessage->message(), sendMessage->sentMessageToken(), jid);
+                op->deleteLater();
+            });
+#endif
+#endif
 }
 
 /* --------------------------------- Registration ---------------------------------*/
