@@ -93,7 +93,7 @@ public slots:
     void disconnect();
     void code_request(const QString& cc, const QString& phonenumber, const QString& uid, bool useText);
     void code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code);
-    void message_send(QString jid, QByteArray message);
+    void message_send(QString jid, QString message);
 
     QString getCountryCode(const QString& phonenumber);
 signals:

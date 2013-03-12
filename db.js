@@ -93,10 +93,10 @@ function openDB() {
                                      +"content TEXT DEFAULT '', preview BLOB DEFAULT '', url TEXT DEFAULT '', "
                                      +"size INT DEFAULT 0, timestamp TIMESTAMP DEFAULT 0, incoming INT DEFAULT 0, "
                                      +"sent INT DEFAULT 0, delivered INT DEFAULT 0, "
-                                     +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0)");
+                                     +"longitude REAL DEFAULT 0, latitude REAL DEFAULT 0, name TEXT DEFAULT '', vcard TEXT DEFAULT '')");
                         tx.executeSql("CREATE TABLE Contacts (jid TEXT UNIQUE NOT NULL, pushName TEXT NOT NULL DEFAULT '', alias TEXT NOT NULL DEFAULT '', avatar BLOB)");
                     });
-                db.changeVersion("","7");
+                db.changeVersion("","8");
             });
     if(db.version == "") //changeVersion did not take effect yet
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
@@ -166,7 +166,15 @@ function openDB() {
         db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
         console.log("Now at version " + db.version);
     }
-
+    if(db.version == "7") {
+        console.log("Updating db to version 8");
+        db.changeVersion("7","8", function(tx) {
+            tx.executeSql("ALTER TABLE Messages ADD name TEXT DEFAULT ''");
+            tx.executeSql("ALTER TABLE Messages ADD vcard TEXT DEFAULT ''");
+            });
+        db = LocalStorage.openDatabaseSync("WhosThere", "", "WhosThere Database", 1000000);
+        console.log("Now at version " + db.version);
+    }
     return db;
 }
 
@@ -196,7 +204,9 @@ function loadConversation() {
                                                    "sent":      + rs.rows.item(i).sent,
                                                    "delivered": + rs.rows.item(i).delivered,
                                                    "longitude": + rs.rows.item(i).longitude,
-                                                   "latitude":  + rs.rows.item(i).latitude
+                                                   "latitude":  + rs.rows.item(i).latitude,
+                                                   "name":  + rs.rows.item(i).name,
+                                                   "vcard":  + rs.rows.item(i).vcard
                                                    });
                         }
 

@@ -314,18 +314,50 @@ void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::
             qWarning() << "WhosThere::onMessageReceived: cannot handle delivery status " << details.status();
 
     } else {
-
+        Q_ASSERT(message.parts().size() >= 2); //header + body
         QVariantMap data;
 
-        data["type"] = "message";
-        data["content"] = message.text();
-        data["jid"] = message.sender()->id();
+        if(message.part(1).contains("x-whosthere-type")) {
+            if(message.parts().size() > 2
+               && message.part(2).contains("content")
+               && message.part(2).contains("content-type")
+               && message.part(2)["content-type"].variant() == "image/jpeg" )
+                data["preview"] = message.part(2)["content"].variant();
+
+            data["type"] = message.part(1)["x-whosthere-type"].variant();
+
+            if(message.part(1).contains("x-whosthere-url"))
+                data["url"] = message.part(1)["x-whosthere-url"].variant();
+            if(message.part(1).contains("x-whosthere-size"))
+                data["size"] = message.part(1)["x-whosthere-size"].variant();
+
+            if(message.part(1).contains("x-whosthere-latitude"))
+                data["latitude"] = message.part(1)["x-whosthere-latitude"].variant();
+
+            if(message.part(1).contains("x-whosthere-longitude"))
+                data["longitude"] = message.part(1)["x-whosthere-longitude"].variant();
+
+            if(message.part(1).contains("x-whosthere-name"))
+                data["name"] = message.part(1)["x-whosthere-name"].variant();
+
+            if(message.part(1).contains("x-whosthere-vcard"))
+                data["vcard"] = message.part(1)["x-whosthere-vcard"].variant();
+
+        } else {
+            //Text message
+            Q_ASSERT(message.part(1)["content-type"].variant() == QLatin1String("text/plain"));
+            data["type"] = "message";
+            data["content"] = message.text();
+        }
+
         if(message.header().contains("message-token"))
             data["msgId"] = message.header()["message-token"].variant();
         else {
             qWarning() << "message does not have message-token field!";
             return;
         }
+
+        data["jid"] = message.sender()->id();
         if(message.header().contains("message-received"))
             data["timestamp"] = message.header()["message-received"].variant();
         data["incoming"] = 1;
@@ -362,7 +394,7 @@ void WhosThere::onMessageSent2 ( const Tp::Message& message,
     emit newMessage(data);
 }
 
-void WhosThere::message_send(QString jid, QByteArray message)
+void WhosThere::message_send(QString jid, QString message)
 {
 #if 0
     connect(mAccount->ensureAndHandleTextChat(jid), &PendingChannel::finished,

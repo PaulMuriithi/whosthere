@@ -33,7 +33,7 @@ QImage ImageProvider::requestImage(const QString & id, QSize * size, const QSize
     QMetaObject::invokeMethod(viewer->rootObject(), "getPreviewImage",
             Q_RETURN_ARG(QVariant, ret),
             Q_ARG(QVariant, id));
-    QByteArray data = QByteArray::fromBase64(ret.toByteArray());
+    QByteArray data = ret.toByteArray();
     QImage image = QImage::fromData(data);
     qDebug() << "ImageProvider::requestImage(): rawImage, size: " << image.size() << " requested: " << requestedSize;
     if(requestedSize == QSize(-1,-1))
