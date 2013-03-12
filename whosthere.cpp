@@ -421,6 +421,30 @@ void WhosThere::message_send(QString jid, QByteArray message)
 #endif
 }
 
+/* --------------------------------- Utils ----------------------------------- */
+/* Input: A international number without + or 00 */
+QString WhosThere::getCountryCode(const QString& phonenumber) {
+    QFile file(":countries.csv");
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Could not open :countries.csv";
+        return QString();
+    }
+
+    while (!file.atEnd()) {
+        QByteArray line = file.readLine();
+        QList<QByteArray> fields = line.split(',');
+        //Country,CountryCode[,optional data]
+        QString country = *fields.begin();
+        QString cc = *(fields.begin()+1);
+        if(phonenumber.startsWith(cc)) {
+            qDebug() << "Found country code " << cc << " from (amongst others) " << country;
+            return cc;
+        }
+    }
+    qDebug() << "Could not find country code";
+    return QString();
+}
+
 /* --------------------------------- Registration ---------------------------------*/
 void WhosThere::code_request(const QString& cc, const QString& phonenumber, const QString &uid, bool useText)
 {

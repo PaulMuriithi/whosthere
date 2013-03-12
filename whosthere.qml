@@ -58,30 +58,30 @@ MainView {
         Page {
             id: page_login
             visible: false
-            title: i18n.tr("Login/Register")
+            title: i18n.tr("Account Settings")
             anchors.fill: parent
             Column {
                 anchors.fill: parent
                 Label {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("Login")
+                    anchors.margins: units.gu(2)
+                    text: i18n.tr("Account")
                     font.underline: true
                     font.italic: true
                 }
                 Label {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("Login with your mobile number (including country code, excluding leading + or 00) and password. To obtain a password, see section 'Register' below.")
+                    anchors.margins: units.gu(2)
+                    text: i18n.tr("Login with your mobile number (including country code) and password. To obtain a password, see section 'Register' below.")
                     wrapMode: Text.WordWrap
                     anchors { left: parent.left; right: parent.right }
                 }
                 TextField {
-                    anchors.margins: units.gu(1)
+                    anchors.margins: units.gu(2)
                     id: username_txt
                     placeholderText: i18n.tr("Telephone number without leading + or 00")
                     width: parent.width; height: units.gu(4)
                 }
                 TextField {
-                    anchors.margins: units.gu(1)
+                    anchors.margins: units.gu(2)
                     id: password_txt
                     placeholderText: i18n.tr("Password")
                     width: parent.width; height: units.gu(4)
@@ -99,19 +99,23 @@ MainView {
                 }
                 Row {
                     Button {
-                        anchors.margins: units.gu(1)
+                        anchors.margins: units.gu(2)
                         id: login_btn
                         text: i18n.tr("Save")
                         onClicked: {
                             if( username_txt.text == "" || password_txt.text == "")
                                 return;
-
-                            whosthere.set_account(username_txt.text, password_txt.text);
+                            var phonenumber = sanitizePhoneNumber(username_txt.text);
+                            if(!phonenumber) {
+                                alert("You entered an invalid international phone number");
+                                return;
+                            }
+                            whosthere.set_account(phonenumber, password_txt.text);
                         }
                     }
                     Button {
                         id: removeAccount_btn
-                        anchors.margins: units.gu(1)
+                        anchors.margins: units.gu(2)
                         width: units.gu(20)
                         text: i18n.tr("Remove")
                         onClicked: {
@@ -120,74 +124,95 @@ MainView {
                     }
                 }
                 Label {
-                    anchors.margins: units.gu(1)
+                    anchors.margins: units.gu(2)
                     text: i18n.tr("Register")
                     font.italic: true
                     font.underline: true
                 }
                 Label {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("Registration is a two step process: First, enter your country code (e.g. '1' for US) "
-                                  +"and telephone number below (without country code and without leading 0), "
-                                  +"then tap 'Request code'. A code will be send via text to your number. "
+                    anchors.margins: units.gu(2)
+                    text: i18n.tr("Registration is a two step process: First, enter your phone number including country code "
+                                  +"above, "
+                                  +"then tap 'Request code'. A code will be send via text to your phone number. "
                                   +"Enter the code below and click 'Request password'. The password will appear in "
-                                  +"the password field above. Please save it somewhere! You can now login.")
+                                  +"the password field above. Please note it down! You will automatically log in.")
                     wrapMode: Text.WordWrap
                     anchors { left: parent.left; right: parent.right }
                 }
                 Row {
-                    anchors.margins: units.gu(1)
+                    Label {
+                        text: "1. "
+                    }
+                    Button {
+                        id: reqestCode_btn
+                        anchors.margins: units.gu(2)
+                        text: i18n.tr("Request code")
+                        width: units.gu(18)
+                        onClicked: {
+                            var phonenumber = sanitizePhoneNumber(username_txt.text);
+                            if(!phonenumber) {
+                                alert("You entered an invalid international phone number");
+                                return;
+                            }
+                            var cc = whosthere.getCountryCode(phonenumber);
+                            if(!cc) {
+                                alert("Could not determine your country code. Please report this as a bug.");
+                                return;
+                            }
+                            phonenumber = phonenumber.slice(cc.length)
+                            console.log("onClicked: call code_request cc:" + cc + " phonenumber:" + phonenumber);
+                            whosthere.code_request(cc, phonenumber, DB.getUID(), true);
+                        }
+                    }
+                }
+                Row {
+                    Label {
+                        text: "2. "
+                    }
+                    anchors.margins: units.gu(2)
                     TextField {
-                        id: countrycode_txt
-                        placeholderText: i18n.tr("cc")
-                        width: units.gu(10)
+                        anchors.margins: units.gu(2)
+                        id: code_txt
+                        placeholderText: i18n.tr("Code")
+                        width: units.gu(12)
                     }
-                    TextField {
-                        id: username_reg_txt
-                        placeholderText: i18n.tr("mobile number wo. cc")
-                        //height: 28
+                    Button {
+                        //anchors.left: code_txt.right
+                        anchors.margins: units.gu(2)
+                        text: i18n.tr("Request password")
+                        width: units.gu(20)
+                        onClicked: {
+                            console.log("onClicked: call code_register");
+                            var phonenumber = sanitizePhoneNumber(username_txt.text);
+                            if(!phonenumber) {
+                                alert("You entered an invalid international phone number");
+                                return;
+                            }
+                            var cc = whosthere.getCountryCode(phonenumber);
+                            if(!cc) {
+                                alert("Could not determine your country code. Please report this as a bug.");
+                                return;
+                            }
+                            phonenumber = phonenumber.slice(cc.length)
+                            //Remove hyphon if it exists
+                            var code = code_txt.text.replace('-','');
+                            if(code.length != 6) {
+                                alert("You entered an invalid code. It should contain 6 digits.");
+                                return;
+                            }
+                            whosthere.code_register(cc, phonenumber, DB.getUID(), code);
+                        }
                     }
-                }
-                Button {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("Request code")
-                    width: units.gu(18)
-                    onClicked: {
-                        if(username_reg_txt.text == "" || countrycode_txt.text == "")
-                            return;
-                        console.log("onClicked: call code_request");
-                        whosthere.code_request(countrycode_txt.text, username_reg_txt.text, DB.getUID(), true);
-                    }
-                }
-                TextField {
-                    anchors.margins: units.gu(1)
-                    id: code_txt
-                    placeholderText: i18n.tr("Code you got via text")
-                    //height: 28
-                }
-                Button {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("Request password")
-                    width: units.gu(22)
-                    onClicked: {
-                        if(username_reg_txt.text == "" || countrycode_txt.text == ""
-                                || code_txt.text == "")
-                            return;
-                        console.log("onClicked: call code_register");
-                        //Remove hyphon if it exists
-                        var code = code_txt.text.replace('-','');
-
-                        whosthere.code_register(countrycode_txt.text, username_reg_txt.text, DB.getUID(), code);
-                    }
-                }
-
-                Label {
-                    anchors.margins: units.gu(1)
-                    text: i18n.tr("By connecting you agree to <a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>");
-                    onLinkActivated: Qt.openUrlExternally(link)
-                    wrapMode: Text.WordWrap
                 }
             }
+            Label {
+                anchors.bottom: parent.bottom
+                anchors.margins: units.gu(2)
+                text: i18n.tr("By connecting you agree to<br><a href='http://www.whatsapp.com/legal/#TOS'>Whatsapp's terms of service</a>");
+                onLinkActivated: Qt.openUrlExternally(link)
+                wrapMode: Text.WordWrap
+            }
+
             tools: ToolbarActions {
                 Action {
                     text: "back"
@@ -287,11 +312,13 @@ MainView {
             visible: false
             anchors.fill: parent
             title: i18n.tr("Conversation with " + DB.displayName(jid))
-            Button {
-                id: back_btn
-                text: i18n.tr("Back")
-                anchors { left: parent.left }
-                onClicked: pagestack.push(page_contacts);
+            Row {
+                id: status_row
+                Button {
+                    text: i18n.tr("Contacts")
+                    //anchors { left: parent.left }
+                    onClicked: pagestack.push(page_contacts);
+                }
             }
             ListModel {
                 id: conversationMessages
@@ -299,8 +326,8 @@ MainView {
 
             /* List view showing the messages */
             ListView {
-                anchors {top: back_btn.bottom; left: parent.left; right: parent.right; bottom: newMessage_inpt.top }
-                anchors.margins: units.gu(1)
+                anchors {top: status_row.bottom; left: parent.left; right: parent.right; bottom: newMessage_inpt.top }
+                anchors.margins: units.gu(2)
                 model: conversationMessages
                 delegate: Item {
                     anchors { left: parent.left; right: parent.right }
@@ -342,7 +369,7 @@ MainView {
                             id: txtclm
                             anchors.left: preview_img.right
                             Label { //Text
-                                text: type == "message" ? content : type
+                                text: (type == "message" ? content : type) + (name ? " " + name : "")
                             }
                             Label { //Status
                                 text: (timestamp ? (Util.formatTime(timestamp) + " ") : "" )
@@ -353,7 +380,7 @@ MainView {
                         }
                         Image {
                             id: preview_img
-                            anchors.margins: units.gu(1)
+                            anchors.margins: units.gu(2)
                             anchors.left: parent.left
                             //Seems that the preview images are always 100x75, 75x100 or 100x100 (for location)
                             width: preview ? (sourceSize.height > sourceSize.width ? units.gu(3) : units.gu(4)) : 0
@@ -469,5 +496,19 @@ MainView {
 
     function getPreviewImage(id) {
         return DB.getPreviewImage(id);
+    }
+
+    function alert(message) {
+        Util.log(message); //TODO
+    }
+
+    function sanitizePhoneNumber(number) {
+        if( number.indexOf("+") == 0 )
+            return number.slice(1);
+        if( number.indexOf("00") == 0 )
+            return number.slice(2);
+        if( number.indexOf("0") == 0 )
+            return ""; //not an international number
+        return number;
     }
 }

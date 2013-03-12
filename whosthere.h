@@ -95,6 +95,7 @@ public slots:
     void code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code);
     void message_send(QString jid, QByteArray message);
 
+    QString getCountryCode(const QString& phonenumber);
 signals:
     void noAccount();
     void accountOk();
