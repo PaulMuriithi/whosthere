@@ -498,9 +498,12 @@ MainView {
         onCode_register_response: {
             Util.log("onCode_register_response: " + status);
             if(status == 'ok') {
-                //password_txt.text = pw;
-                //username_txt.text = countrycode_txt.text+username_reg_txt.text;
-                set_account(countrycode_txt.text+username_reg_txt.text, pw);
+                var phonenumber = sanitizePhoneNumber(username_txt.text);
+                if(!phonenumber) {
+                    alert("You entered an invalid international phone number");
+                    return;
+                }
+                set_account(phonenumber, pw);
             } else {
                 //TODO: error msg
             }
