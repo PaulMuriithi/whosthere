@@ -88,6 +88,7 @@ public slots:
 
     /* QML */
     void enableAccount(bool enabled);
+    void alwaysConnected(bool enabled);
     void removeAccount();
     void set_account(const QString& phonenumber, const QString &password);
     void disconnect();
@@ -102,6 +103,7 @@ signals:
     void connectionStatusChanged(QString status);
     /* Emitted when the account is enabled/disabled */
     void accountEnabledChanged(bool enabled);
+    void accountAlwaysConnectedChanged(bool enabled);
     void accountValidityChanged(bool valid);
     void accountParametersChanged(QVariantMap parameters);
     void code_request_response(const QString &status, const QString &reason);

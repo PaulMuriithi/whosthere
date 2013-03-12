@@ -96,6 +96,15 @@ MainView {
                             whosthere.enableAccount( checked );
                         }
                     }
+                    Label {
+                        text: i18n.tr("Always connected: ")
+                    }
+                    CheckBox {
+                        id: alwaysConnected_chk
+                        onClicked: {
+                            whosthere.alwaysConnected( checked );
+                        }
+                    }
                 }
                 Row {
                     Button {
@@ -419,6 +428,7 @@ MainView {
             Util.log("onNoAccount");
             removeAccount_btn.enabled = false;
             accountEnabled_chk.checked = true;
+            alwaysConnected_chk.checked = false;
             pagestack.push(page_login);
         }
         onConnectionStatusChanged: {
@@ -431,6 +441,10 @@ MainView {
             accountEnabled_chk.checked = enabled;
             if(!enabled)
                 pagestack.push(page_login);
+        }
+        onAccountAlwaysConnectedChanged: {
+            Util.log("onAccountAlwaysConnectedChanged " + enabled);
+            alwaysConnected_chk.checked = enabled;
         }
 
         onAccountValidityChanged: {

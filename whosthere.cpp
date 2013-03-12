@@ -182,6 +182,10 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
              this, &WhosThere::accountEnabledChanged);
     accountEnabledChanged(mAccount->isEnabled());
 
+    connect( mAccount.data(), &Account::stateChanged,
+             this, &WhosThere::accountAlwaysConnectedChanged);
+    accountAlwaysConnectedChanged(mAccount->connectsAutomatically());
+
     connect( mAccount.data(), &Account::validityChanged,
              this, &WhosThere::accountValidityChanged);
     accountValidityChanged(mAccount->isValid());
@@ -210,6 +214,12 @@ void WhosThere::enableAccount(bool enabled) {
     if(!mAccount.isNull())
         connect(mAccount->setEnabled(enabled), &PendingOperation::finished,
                 this, &WhosThere::onPendingOperation);
+}
+
+void WhosThere::alwaysConnected(bool enabled) {
+     if(!mAccount.isNull())
+         connect(mAccount->setConnectsAutomatically(enabled), &PendingOperation::finished,
+                 this, &WhosThere::onPendingOperation);
 }
 
 void WhosThere::onAccountInvalidated() {
