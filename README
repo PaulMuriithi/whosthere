@@ -1,4 +1,4 @@
-WhosThere - A WhatsApp client for Ubuntu (Touch)
+WhosThere - A WhatsApp client for Linux and Ubuntu Touch
 
 = Build =
 qmake && make && make install
@@ -8,3 +8,14 @@ On the desktop:
   whosthere
 On the phone:
   whosthere --desktop_file_hint /usr/share/applications/whosthere.desktop
+
+= Troubleshoot =
+Run WhosThere from a shell to see debugging output.
+
+WhosThere uses telepathy-whosthere as a backend. Start it from a shell by
+/usr/lib/telepathy/telepathy-whosthere
+to see its debugging output. Kill any running instance before that.
+
+To troubleshoot account problems, use the command mc-tool.
+
+Report bugs at https://github.com/mgehre/whosthere/issues

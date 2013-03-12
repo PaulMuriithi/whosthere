@@ -1,2 +1,7 @@
+Version 1.0.8
+- Ported to telepathy
+- Made registering of new password easier
+- Allow more setting in account panel
+- Format messages nicer
 Version 1.0.7
 - Add support for receiving images, videos, locations and audio
