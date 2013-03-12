@@ -205,8 +205,8 @@ function loadConversation() {
                                                    "delivered": + rs.rows.item(i).delivered,
                                                    "longitude": + rs.rows.item(i).longitude,
                                                    "latitude":  + rs.rows.item(i).latitude,
-                                                   "name":  + rs.rows.item(i).name,
-                                                   "vcard":  + rs.rows.item(i).vcard
+                                                   "name":      '' + rs.rows.item(i).name,
+                                                   "vcard":     '' + rs.rows.item(i).vcard
                                                    });
                         }
 
