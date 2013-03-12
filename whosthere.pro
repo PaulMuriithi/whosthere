@@ -36,9 +36,3 @@ SOURCES += \
 
 OTHER_FILES += \
     util.js
-
-HEADERS += \
-    telepathyclient.h
-
-SOURCES += \
-    telepathyclient.cpp

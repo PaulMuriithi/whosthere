@@ -23,11 +23,9 @@
 #include <TelepathyQt/Types>
 #include <TelepathyQt/Account>
 #include <TelepathyQt/PendingAccount>
-#include <TelepathyQt/ClientRegistrar>
 #include <TelepathyQt/SimpleTextObserver>
 
 using namespace Tp;
-class TelepathyClient;
 
 class WhosThere : public QQuickItem
 {
@@ -59,8 +57,6 @@ private:
     ConnectionManagerPtr cm;
     AccountPtr mAccount;
     ConnectionPtr mConn;
-    ClientRegistrarPtr mCR;
-    SharedPtr<TelepathyClient> mHandler;
     SimpleTextObserverPtr m_simpleTextObserver;
 
     /* Telepathy */

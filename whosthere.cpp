@@ -39,9 +39,6 @@
 #include <TelepathyQt/TextChannel>
 
 #include "whosthere.h"
-#include "telepathyclient.h"
-
-// #define USE_CLIENT
 
 using namespace std;
 
@@ -59,20 +56,6 @@ WhosThere::WhosThere(QQuickItem *parent) :
     ChannelFactoryPtr channelFactory = ChannelFactory::create(QDBusConnection::sessionBus());
 
     ContactFactoryPtr contactFactory = ContactFactory::create(Contact::FeatureSimplePresence);
-
-#ifdef USE_CLIENT
-    /* TelepathyClient */
-    mCR = ClientRegistrar::create(accountFactory, connectionFactory, channelFactory);
-    mHandler = TelepathyClient::create();
-    QString handlerName(QLatin1String("WhosThereGui"));
-    if (!mCR->registerClient(AbstractClientPtr::dynamicCast(mHandler), handlerName)) {
-        qWarning() << "Unable to register incoming file transfer handler, aborting";
-    }
-    connect(mHandler.data(), &TelepathyClient::messageReceived,
-            this, &WhosThere::onMessageReceived);
-    connect(mHandler.data(), &TelepathyClient::messageSent,
-            this, &WhosThere::onMessageSent);
-#endif
 
     /* AccountManager */
     mAM = Tp::AccountManager::create(accountFactory, connectionFactory, channelFactory, contactFactory);
@@ -197,13 +180,11 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
              this, &WhosThere::accountParametersChanged);
     accountParametersChanged( mAccount->parameters() );
 
-#ifndef USE_CLIENT
     m_simpleTextObserver = SimpleTextObserver::create(mAccount);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageReceived,
             this, &WhosThere::onMessageReceived);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageSent,
             this, &WhosThere::onMessageSent);
-#endif
 
     connect(mAccount.data(), &Account::connectionChanged,
             this, &WhosThere::onAccountConnectionChanged);
@@ -406,35 +387,6 @@ void WhosThere::onMessageSent2 ( const Tp::Message& message,
 
 void WhosThere::message_send(QString jid, QString message)
 {
-#if 0
-    connect(mAccount->ensureAndHandleTextChat(jid), &PendingChannel::finished,
-            [this,message](PendingOperation* op) {
-        if (op->isError()) {
-            qWarning() << "ensureChannel failed: " <<
-                op->errorName() << ": " << op->errorMessage();
-            return;
-        }
-        TextChannelPtr channel = TextChannelPtr::dynamicCast((dynamic_cast<PendingChannel*>(op))->channel());
-        MessagePartList partList;
-        MessagePart header, body;
-        header["message-type"]          = QDBusVariant(ChannelTextMessageTypeNormal);
-        body["content-type"]            = QDBusVariant("text/plain");
-        body["content"]                 = QDBusVariant(message);
-        partList << header << body;
-        connect(channel->send(partList), &PendingSendMessage::finished,
-                [](PendingOperation* op) {
-                    if (op->isError()) {
-                        qWarning() << "channel->send failed: " <<
-                        op->errorName() << ": " << op->errorMessage();
-                        return;
-                    }
-                    op->deleteLater();
-                });
-        //op->deleteLater();
-    });
-
-#else
-    //This does not work on newly created channels
     static ContactMessengerPtr contactMessenger;
 
     if(contactMessenger.isNull() || contactMessenger->contactIdentifier() != jid) {
@@ -445,22 +397,7 @@ void WhosThere::message_send(QString jid, QString message)
             return;
         }
     }
-#if 1
     contactMessenger->sendMessage(message);
-#else
-    connect(contactMessenger->sendMessage(message), &PendingOperation::finished,
-            [this, jid](PendingOperation* op) {
-                if (op->isError()) {
-                    qWarning() << "ontactMessenger->sendMessage() failed: " <<
-                    op->errorName() << ": " << op->errorMessage();
-                    return;
-                }
-                PendingSendMessage* sendMessage = dynamic_cast<PendingSendMessage*>(op);
-                onMessageSent2(sendMessage->message(), sendMessage->sentMessageToken(), jid);
-                op->deleteLater();
-            });
-#endif
-#endif
 }
 
 /* --------------------------------- Utils ----------------------------------- */
