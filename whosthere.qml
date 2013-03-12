@@ -77,7 +77,7 @@ MainView {
                 TextField {
                     anchors.margins: units.gu(2)
                     id: username_txt
-                    placeholderText: i18n.tr("Telephone number without leading + or 00")
+                    placeholderText: i18n.tr("Telephone number including country code")
                     width: parent.width; height: units.gu(4)
                 }
                 TextField {
