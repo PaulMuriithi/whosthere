@@ -301,7 +301,7 @@ MainView {
                 id: contactsModel
             }
             ListView {
-                anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(2) }
+                anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; bottom: parent.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
                     text: DB.displayName(jid) + (presence ? " (" + presence + ")" : "")
