@@ -1,5 +1,9 @@
 WhosThere - A WhatsApp client for Linux and Ubuntu Touch
 
+= Prebuild (Ubuntu quantal/Ubuntu touch) =
+sudo apt-add-repository ppa:m-gehre:ppa
+sudo apt-get install whosthere
+
 = Build =
 qmake && make && make install
 
@@ -14,7 +18,7 @@ Run WhosThere from a shell to see debugging output.
 
 WhosThere uses telepathy-whosthere as a backend. Start it from a shell by
 /usr/lib/telepathy/telepathy-whosthere
-to see its debugging output. Kill any running instance before that.
+to see its debugging output. Make sure you killed any running instance before that.
 
 To troubleshoot account problems, use the command mc-tool.
 
