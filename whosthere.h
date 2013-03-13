@@ -72,7 +72,6 @@ private:
                                     Tp::MessageSendingFlags flags,
                                     const QString& msgId,
                                     const Tp::TextChannelPtr& channel);
-    void onMessageSent2( const Tp::Message& message, const QString& msgId, const QString& jid);
     void onConnectionStatusChanged(uint status);
     void onAccountInvalidated();
 

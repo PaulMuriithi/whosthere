@@ -375,17 +375,10 @@ void WhosThere::onMessageSent ( const Tp::Message& message,
                                 const QString& msgId,
                                 const Tp::TextChannelPtr& channel) {
 
-    onMessageSent2(message, msgId, channel->targetId());
-}
-
-void WhosThere::onMessageSent2 ( const Tp::Message& message,
-                                const QString& msgId,
-                                const QString& jid) {
-
     QVariantMap data;
     data["type"] = "message";
     data["content"] = message.text();
-    data["jid"] = jid;
+    data["jid"] = channel->targetId();
     data["msgId"] = msgId;
     if(message.header().contains("message-sent"))
         data["timestamp"] = message.header()["message-sent"].variant();
