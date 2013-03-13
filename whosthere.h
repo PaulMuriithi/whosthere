@@ -91,9 +91,12 @@ public slots:
     void code_request(const QString& cc, const QString& phonenumber, const QString& uid, bool useText);
     void code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code);
     void message_send(QString jid, QString message);
+    void quit();
 
     QString getCountryCode(const QString& phonenumber);
 signals:
+    void quitApp();
+    /* QML */
     void noAccount();
     void accountOk();
     void connectionStatusChanged(QString status);

@@ -424,6 +424,10 @@ QString WhosThere::getCountryCode(const QString& phonenumber) {
     return QString();
 }
 
+void WhosThere::quit() {
+    QCoreApplication::exit(0);
+}
+
 /* --------------------------------- Registration ---------------------------------*/
 void WhosThere::code_request(const QString& cc, const QString& phonenumber, const QString &uid, bool useText)
 {

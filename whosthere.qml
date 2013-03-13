@@ -224,10 +224,14 @@ MainView {
 
             tools: ToolbarActions {
                 Action {
-                    text: "back"
+                    text: "Contacts"
                     onTriggered: {
                         pagestack.push(page_contacts);
                     }
+                }
+                Action {
+                    text: i18n.tr("Quit")
+                    onTriggered: whosthere.quit();
                 }
             }
         }
@@ -311,6 +315,10 @@ MainView {
                     onTriggered: {
                         pagestack.push(page_login);
                     }
+                }
+                Action {
+                    text: i18n.tr("Quit")
+                    onTriggered: whosthere.quit();
                 }
             }
         }
