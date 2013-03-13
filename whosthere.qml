@@ -20,6 +20,7 @@ import QtQuick 2.0
 import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItem
+import Ubuntu.Components.Popups 0.1
 import WhosThere 1.0
 import "db.js" as DB
 import "util.js" as Util
@@ -507,8 +508,7 @@ MainView {
         onCode_request_response: {
             Util.log("onCode_request_response: " + status );
             if( status != 'sent' ) {
-                //TODO: some error has occured, look into reason
-                //possible reason: too_recent
+                alert("Reqeust failed! Status: " + status + " Reason: " + reason);
             }
         }
         onCode_register_response: {
@@ -521,10 +521,21 @@ MainView {
                 }
                 set_account(phonenumber, pw);
             } else {
-                //TODO: error msg
+                alert("Registration failed! Status: " + status);
             }
         }
 
+    }
+    Component {
+        id: dialogComponent
+        Dialog {
+            id: dialogue
+            //anchors.horizontalCenter: parent.horizontalCenter
+            Button {
+                text: i18n.tr("Close")
+                onClicked: PopupUtils.close(dialogue)
+            }
+        }
     }
 
     function getPreviewImage(id) {
@@ -532,7 +543,9 @@ MainView {
     }
 
     function alert(message) {
-        Util.log(message); //TODO
+        Util.log("alert: "+ message);
+        //popover_lbl.text = message;
+        PopupUtils.open(dialogComponent, pagestack, {"text": message})
     }
 
     function sanitizePhoneNumber(number) {
