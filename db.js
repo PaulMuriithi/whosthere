@@ -23,6 +23,8 @@ var presences = new Object;
 function showConversation(jid) {
     page_conversation.jid = jid;
     loadConversation();
+    if(jid in presences)
+        contactPresence_lbl.text = presences[jid];
     pagestack.push(page_conversation);
 }
 

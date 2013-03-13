@@ -329,16 +329,19 @@ MainView {
             visible: false
             anchors.fill: parent
             title: i18n.tr("Conversation with " + DB.displayName(jid))
-            Row {
-                id: status_row
-                Button {
-                    text: i18n.tr("Contacts")
-                    //anchors { left: parent.left }
-                    onClicked: pagestack.push(page_contacts);
-                }
-            }
             ListModel {
                 id: conversationMessages
+            }
+
+            Row {
+                id: status_row
+                Label {
+                    text: i18n.tr("Status: ")
+                }
+                Label {
+                    id: contactPresence_lbl
+                    text: ""
+                }
             }
 
             /* List view showing the messages */
@@ -493,6 +496,8 @@ MainView {
             Util.log("onPresenceChanged: " + jid + " " + presence);
             DB.presences[jid] = presence;
             DB.updateContacts();
+            if(jid == page_conversation.jid)
+                contactPresence_lbl.text = presence;
         }
 
         /* Registration */
