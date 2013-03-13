@@ -34,34 +34,41 @@ function displayName(jid) {
 
 function updateContacts() {
     contactsModel.clear();
-    var contacts = [];
+    var contacts = new Object();
     db.transaction(
                 function(tx) {
-                    var rs = tx.executeSql("SELECT ct.jid, ct.pushName, ct.alias, ct.avatar, lastmsg.content, lastmsg.lastTime FROM Contacts ct, (SELECT max(timestamp) as lastTime, content, jid FROM Messages WHERE type = 'message' GROUP BY jid) lastmsg WHERE ct.jid = lastmsg.jid");
+                    var rs = tx.executeSql("SELECT jid, pushName, alias, avatar FROM Contacts");
                     console.log("updateContacts results: " + rs.rows.length)
-                        for(var i=0;i < rs.rows.length; ++i) {
-                            for(var j in rs.rows.item(i))
-                                console.log("Item: " + j + " = " + rs.rows.item(i)[j])
-                            contacts.push({   "jid":      '' + rs.rows.item(i).jid,
-                                              "pushName": '' + rs.rows.item(i).pushName,
-                                              "alias":    '' + rs.rows.item(i).alias,
-                                              "avatar":   '' + rs.rows.item(i).avatar,
-                                              "lastMsg":   '' + rs.rows.item(i).content,
-                                              "lastTime":   '' + rs.rows.item(i).lastTime,
-                                               });
+                    for(var i=0;i < rs.rows.length; ++i) {
+                        var jid = '' + rs.rows.item(i).jid;
+                        contacts[jid] = ({"jid":      jid,
+                                          "pushName": '' + rs.rows.item(i).pushName,
+                                          "alias":    '' + rs.rows.item(i).alias,
+                                          "avatar":   '' + rs.rows.item(i).avatar,
+                                          "lastMsg":   '',
+                                          "lastTime":   '',
+                                           });
+                    }
+                    //Get last message from/to this contact
+                    rs = tx.executeSql("SELECT max(timestamp) as lastTime, content, jid FROM Messages WHERE type = 'message' GROUP BY jid");
+                    for(var i=0;i < rs.rows.length; ++i) {
+                        var jid = '' + rs.rows.item(i).jid;
+                        if(jid in contacts) {
+                            contacts[jid]["lastMsg"] = '' + rs.rows.item(i).content;
+                            contacts[jid]["lastTime"] = '' + rs.rows.item(i).lastTime;
                         }
-
+                    }
                 });
 
 
-    for(var i in contacts) {
-        if( contacts[i]["jid"] in presences ) {
-            contacts[i]["presence"] = presences[contacts[i]["jid"]];
+    for(var jid in contacts) {
+        if( jid in presences ) {
+            contacts[jid]["presence"] = presences[jid];
         } else {
-            contacts[i]["presence"] = "";
+            contacts[jid]["presence"] = "";
         }
 
-        contactsModel.append(contacts[i]);
+        contactsModel.append(contacts[jid]);
     }
 }
 
