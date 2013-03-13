@@ -42,6 +42,11 @@
 
 using namespace std;
 
+
+WhosThere::~WhosThere() {
+
+}
+
 /* --------------------------------- Account Manager ---------------------------------*/
 WhosThere::WhosThere(QQuickItem *parent) :
     QQuickItem(parent)
@@ -62,15 +67,11 @@ WhosThere::WhosThere(QQuickItem *parent) :
     qDebug() << "Waiting for account manager";
     connect(mAM->becomeReady(), &PendingOperation::finished,
             this, &WhosThere::onAMReady);
-    /*connect(mAM.data(),
-                SIGNAL(newAccount(const Tp::AccountPtr &)),
-                SLOT(onNewAccount(const Tp::AccountPtr &)));*/
+    connect(mAM.data(), &AccountManager::newAccount,
+            this, &WhosThere::onNewAccount);
 }
 
 
-WhosThere::~WhosThere() {
-
-}
 
 void WhosThere::onAMReady(Tp::PendingOperation *op)
 {
@@ -91,6 +92,18 @@ void WhosThere::onAMReady(Tp::PendingOperation *op)
         mAccount = *accounts.begin();
         connect(mAccount->becomeReady(), &PendingOperation::finished,
                 this, &WhosThere::onAccountFinished);
+    }
+}
+
+void WhosThere::onNewAccount(const Tp::AccountPtr &account) {
+    qDebug() << "WhosThere::OnNewAccount " << account->normalizedName();
+    if(mAccount.isNull()) {
+        emit accountOk();
+        mAccount = account;
+        connect(mAccount->becomeReady(), &PendingOperation::finished,
+                this, &WhosThere::onAccountFinished);
+    } else {
+        qWarning() << "Multiple acccounts detected. Use mc-tool to remove one!";
     }
 }
 

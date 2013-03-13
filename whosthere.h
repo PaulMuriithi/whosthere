@@ -64,6 +64,7 @@ private:
     void onAMReady(PendingOperation *op);
     void onAccountFinished(PendingOperation* acc);
     void onAccountConnectionChanged(const ConnectionPtr &conn);
+    void onNewAccount(const Tp::AccountPtr &account);
     void onPendingOperation(PendingOperation* op);
     void onAccountCreateFinished(PendingOperation* op);
     void onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
