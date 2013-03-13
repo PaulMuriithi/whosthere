@@ -79,6 +79,8 @@ MainView {
                     id: username_txt
                     placeholderText: i18n.tr("Telephone number including country code")
                     width: parent.width; height: units.gu(4)
+                    //Starts with non-zero or + or 00
+                    validator: RegExpValidator { regExp: /(\+|00|)[1-9]\d+/ }
                 }
                 TextField {
                     anchors.margins: units.gu(2)
@@ -184,6 +186,7 @@ MainView {
                         id: code_txt
                         placeholderText: i18n.tr("Code")
                         width: units.gu(12)
+                        validator: RegExpValidator { regExp: /(\d{3}-?\d{3})|/ }
                     }
                     Button {
                         //anchors.left: code_txt.right
