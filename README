@@ -10,6 +10,8 @@ qmake && make && make install
 = Run =
 You'll need to install telepathy-whosthere (https://github.com/mgehre/telepathy-whosthere) first. If you used the ppa, then everything
 will be already setup for you.
+It is advised that your run telepathy-whosthere from a shell to see it's debugging output, especially during registration.
+It can be found at /usr/lib/telepathy/telepathy-whosthere. Make sure you killed any running instance before that.
 
 On the desktop:
   whosthere
@@ -18,10 +20,6 @@ On the phone:
 
 = Troubleshoot =
 Run WhosThere from a shell to see debugging output.
-
-WhosThere uses telepathy-whosthere as a backend. Start it from a shell by
-/usr/lib/telepathy/telepathy-whosthere
-to see its debugging output. Make sure you killed any running instance before that.
 
 To troubleshoot account problems, use the command mc-tool.
 
