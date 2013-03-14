@@ -1,3 +1,9 @@
+whosthere (1.0.10) quantal; urgency=low
+
+  * Multiple bug fixes
+
+ -- Matthias Gehre <M.Gehre@gmx.de>  Wed, 13 Mar 2013 20:45:59 -0500
+
 whosthere (1.0.9) quantal; urgency=low
 
   * Fix registration
