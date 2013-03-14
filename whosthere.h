@@ -54,9 +54,7 @@ public:
                              const QString& uid, const QString& code, std::function<void(const QString&,const QString&)> callback);
 private:
     AccountManagerPtr mAM;
-    ConnectionManagerPtr cm;
     AccountPtr mAccount;
-    ConnectionPtr mConn;
     SimpleTextObserverPtr m_simpleTextObserver;
 
     /* Telepathy */
@@ -67,12 +65,13 @@ private:
     void onNewAccount(const Tp::AccountPtr &account);
     void onPendingOperation(PendingOperation* op);
     void onAccountCreateFinished(PendingOperation* op);
+    void onOnlinenessChanged(bool online);
     void onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel);
     void onMessageSent (const Tp::Message& message,
                                     Tp::MessageSendingFlags flags,
                                     const QString& msgId,
                                     const Tp::TextChannelPtr& channel);
-    void onConnectionStatusChanged(uint status);
+    void onConnectionStatusChanged(Tp::ConnectionStatus status);
     void onAccountInvalidated();
 
     void onContactsChanged(const Tp::Contacts &  	contactsAdded,
@@ -99,7 +98,7 @@ signals:
     /* QML */
     void noAccount();
     void accountOk();
-    void connectionStatusChanged(QString status);
+    void connectionStatusChanged(QString status, QString reason);
     /* Emitted when the account is enabled/disabled */
     void accountEnabledChanged(bool enabled);
     void accountAlwaysConnectedChanged(bool enabled);

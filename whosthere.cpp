@@ -137,17 +137,20 @@ void WhosThere::set_account(const QString& phonenumber, const QString& password)
 
 void WhosThere::connectAccount() {
     if(!mAccount.isNull())
-        mAccount->setRequestedPresence(Presence::available());
-}
+        connect(mAccount->setRequestedPresence(Presence::available()), &PendingOperation::finished,
+                this, &WhosThere::onPendingOperation);
+       }
 
 void WhosThere::removeAccount() {
     if(!mAccount.isNull())
-        mAccount->remove();
+        connect(mAccount->remove(),&PendingOperation::finished,
+                this, &WhosThere::onPendingOperation);
 }
 
 void WhosThere::disconnect() {
     if(!mAccount.isNull())
-        mAccount->setRequestedPresence(Presence::offline());
+        connect(mAccount->setRequestedPresence(Presence::offline()), &PendingOperation::finished,
+                this, &WhosThere::onPendingOperation);
 }
 
 void WhosThere::onAccountCreateFinished(PendingOperation* op) {
@@ -178,7 +181,7 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
              this, &WhosThere::accountEnabledChanged);
     accountEnabledChanged(mAccount->isEnabled());
 
-    connect( mAccount.data(), &Account::stateChanged,
+    connect( mAccount.data(), &Account::connectsAutomaticallyPropertyChanged,
              this, &WhosThere::accountAlwaysConnectedChanged);
     accountAlwaysConnectedChanged(mAccount->connectsAutomatically());
 
@@ -192,6 +195,10 @@ void WhosThere::onAccountFinished(PendingOperation* op) {
     connect( mAccount.data(), &Account::parametersChanged,
              this, &WhosThere::accountParametersChanged);
     accountParametersChanged( mAccount->parameters() );
+
+    connect( mAccount.data(), &Account::onlinenessChanged,
+             this, &WhosThere::onOnlinenessChanged);
+    onOnlinenessChanged( mAccount->isOnline() );
 
     m_simpleTextObserver = SimpleTextObserver::create(mAccount);
     connect(m_simpleTextObserver.data(), &SimpleTextObserver::messageReceived,
@@ -222,6 +229,14 @@ void WhosThere::onAccountInvalidated() {
     emit noAccount();
 }
 
+void WhosThere::onOnlinenessChanged(bool online) {
+    qDebug() << "WhosThere::onOnlinenessChanged " << online;
+    if(!mAccount->connection().isNull())
+        onConnectionStatusChanged(mAccount->connection()->status());
+    else
+        qWarning() << "Got WhosThere::onOnlinenessChanged, but no connection";
+}
+
 void WhosThere::onPendingOperation(PendingOperation* op) {
     if (op->isError()) {
         QString msg;
@@ -238,31 +253,54 @@ void WhosThere::onAccountConnectionChanged(const ConnectionPtr &conn)
 {
     if (conn) {
         qDebug() << "WhosThere::onAccountConnectionChanged";
-        mConn = conn;
-        connect(mConn.data(), &Connection::statusChanged,
+
+        connect(mAccount->connection().data(), &Connection::statusChanged,
                 this, &WhosThere::onConnectionStatusChanged);
-        onConnectionStatusChanged( mConn->status() );
-        connect(mConn->contactManager().data(), &ContactManager::stateChanged,
+        onConnectionStatusChanged( mAccount->connection()->status() );
+
+        connect(mAccount->connection()->contactManager().data(), &ContactManager::stateChanged,
                 this, &WhosThere::onContactManagerStateChanged);
-        onContactManagerStateChanged(mConn->contactManager()->state());
+        onContactManagerStateChanged( mAccount->connection()->contactManager()->state());
     } else {
-        emit connectionStatusChanged("disconnected");
+        emit connectionStatusChanged("disconnected", "");
         qDebug() << " WhosThere::onAccountConnectionChanged: conn = NULL";
     }
 }
 
-void WhosThere::onConnectionStatusChanged(uint status) {
+void WhosThere::onConnectionStatusChanged(ConnectionStatus status) {
+    QString reason;
+    switch(mAccount->connection()->statusReason()) {
+    case ConnectionStatusReasonNoneSpecified:
+        reason = "none";
+        break;
+    case ConnectionStatusReasonRequested:
+        reason = "requested";
+        break;
+    case ConnectionStatusReasonNetworkError:
+        reason = "network error";
+        break;
+    case ConnectionStatusReasonAuthenticationFailed:
+        reason = "authentication failed";
+        break;
+    default:
+        QTextStream(&reason) << "unknown " << mAccount->connection()->statusReason();
+    }
+
     switch(status) {
     case ConnectionStatusDisconnected:
-        emit connectionStatusChanged("disconnected");
-        connectAccount();
+        emit connectionStatusChanged("disconnected", reason);
+        if(mAccount->connection()->statusReason() != ConnectionStatusReasonAuthenticationFailed
+           && mAccount->connection()->statusReason() != ConnectionStatusReasonRequested)
+            connectAccount();
         break;
     case ConnectionStatusConnecting:
-        emit connectionStatusChanged("connecting");
+        emit connectionStatusChanged("connecting", reason);
         break;
     case ConnectionStatusConnected:
-        emit connectionStatusChanged("connected");
+        emit connectionStatusChanged("connected", reason);
         break;
+    default:
+        qWarning() << "WhosThere::onConnectionStatusChanged: Undefined connection status";
     }
 }
 
@@ -271,16 +309,16 @@ void WhosThere::onContactManagerStateChanged(ContactListState state)
 {
     qDebug() << "WhosThere::onContactManagerStateChanged " << state;
     if (state == ContactListStateSuccess) {
-        connect(mConn->contactManager().data(), &ContactManager::allKnownContactsChanged,
+        connect(mAccount->connection()->contactManager().data(), &ContactManager::allKnownContactsChanged,
                 this, &WhosThere::onContactsChanged);
         qDebug() << "Loading contacts";
-        onNewContacts(mConn->contactManager()->allKnownContacts());
+        onNewContacts(mAccount->connection()->contactManager()->allKnownContacts());
     }
 }
 
 void WhosThere::onContactsChanged(const Tp::Contacts &  	contactsAdded,
-                                  const Tp::Contacts &  	contactsRemoved,
-                                  const Tp::Channel::GroupMemberChangeDetails &  	details) {
+                                  const Tp::Contacts &  	/*contactsRemoved*/,
+                                  const Tp::Channel::GroupMemberChangeDetails &  	/*details*/) {
 
     qDebug() << "WhosThere::onContactsChanged";
     onNewContacts(contactsAdded);
@@ -291,17 +329,16 @@ void WhosThere::onNewContacts(const Tp::Contacts& contacts) {
     foreach (const ContactPtr &contact, contacts) {
         QString jid = contact->id();
         emit newContact(jid);
-        emit presenceChanged(jid, contact->presence().status());
-
         connect(contact.data(), &Contact::presenceChanged,
                 [this,jid](const Tp::Presence& presence) {
                         emit presenceChanged(jid, presence.status());
                 });
+        emit presenceChanged(jid, contact->presence().status());
     }
 }
 
 /* --------------------------------- SimpleTextObserver ---------------------------------*/
-void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr &channel) {
+void WhosThere::onMessageReceived(const Tp::ReceivedMessage &message, const Tp::TextChannelPtr& /*channel*/) {
     qDebug() << "WhosThere::onMessageReceived isDeliveryReport: " << message.isDeliveryReport()
              << " text: " << message.text()
              << " sender: " << message.sender()->id();
