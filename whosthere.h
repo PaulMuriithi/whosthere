@@ -114,6 +114,7 @@ signals:
 
     void newContact(QString jid);
     void presenceChanged(QString jid, QString presence);
+    void alert(QString message);
  /*
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);

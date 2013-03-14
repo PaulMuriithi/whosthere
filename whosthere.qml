@@ -524,6 +524,9 @@ MainView {
                 alert("Registration failed! Status: " + status);
             }
         }
+        onAlert: {
+            alert(message)
+        }
 
     }
     Component {

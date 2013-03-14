@@ -103,7 +103,7 @@ void WhosThere::onNewAccount(const Tp::AccountPtr &account) {
         connect(mAccount->becomeReady(), &PendingOperation::finished,
                 this, &WhosThere::onAccountFinished);
     } else {
-        qWarning() << "Multiple acccounts detected. Use mc-tool to remove one!";
+        emit alert("Multiple acccounts detected. Use mc-tool to remove all but one!");
     }
 }
 
@@ -217,16 +217,20 @@ void WhosThere::alwaysConnected(bool enabled) {
 }
 
 void WhosThere::onAccountInvalidated() {
+    qDebug() << "WhosThere::onAccountInvalidated";
     mAccount.reset();
     emit noAccount();
 }
 
-void WhosThere::onPendingOperation(PendingOperation* acc) {
-    if (acc->isError()) {
-        qWarning() << "Pending operation failed: " <<
-            acc->errorName() << ": " << acc->errorMessage();
-        return;
+void WhosThere::onPendingOperation(PendingOperation* op) {
+    if (op->isError()) {
+        QString msg;
+        QTextStream(&msg) << "Pending operation failed: " <<
+            op->errorName() << ": " << op->errorMessage();
+        emit alert(msg);
     }
+    qDebug() << "WhosThere::onPendingOperation";
+    op->deleteLater();
 }
 
 /* --------------------------------- Connection ---------------------------------*/
@@ -438,7 +442,7 @@ void WhosThere::quit() {
 void WhosThere::code_request(const QString& cc, const QString& phonenumber, const QString &uid, bool useText)
 {
     if(uid.length() != 32){
-        qWarning() << "WhosThere::code_request : uid.length() != 32";
+        emit alert("WhosThere::code_request : uid.length() != 32");
         return;
     }
     WhosThere::requestCode(cc, phonenumber, uid, useText,
@@ -450,14 +454,14 @@ void WhosThere::code_request(const QString& cc, const QString& phonenumber, cons
 void WhosThere::code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code_)
 {
     if(uid.length() != 32) {
-        qWarning() << "WhosThere::code_register : uid.length() != 32";
+        emit alert("WhosThere::code_register : uid.length() != 32");
         return;
     }
     QString code = code_;
     if(code.length() == 7) //remove hyphon
         code = code.left(3) + code.right(3);
     if(code.length() != 6) {
-        qWarning() << "WhosThere::code_register : code.length() != 6";
+        emit alert("WhosThere::code_register : code.length() != 6");
         return;
     }
 
