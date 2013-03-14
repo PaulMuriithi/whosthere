@@ -2,6 +2,8 @@ WhosThere - A WhatsApp client for Linux and Ubuntu Touch
 
 = Prebuild (Ubuntu quantal/Ubuntu touch) =
 sudo apt-add-repository ppa:m-gehre:ppa
+sudo add-apt-repository ppa:canonical-qt5-edgers/qt5-proper
+sudo add-apt-repository ppa:ubuntu-sdk-team/ppa
 sudo apt-get install whosthere
 
 = Build =
@@ -23,4 +25,4 @@ Run WhosThere from a shell to see debugging output.
 
 To troubleshoot account problems, use the command mc-tool.
 
-Report bugs at https://github.com/mgehre/whosthere/issues
+Report bugs at https://bugs.launchpad.net/whosthere/+bugs
