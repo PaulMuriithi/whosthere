@@ -284,10 +284,12 @@ MainView {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        if(page_contacts.state == "disconnected")
+                        if(page_contacts.state == "disconnected") {
+                            page_contacts.state == "connecting";
                             whosthere.connectAccount();
-                        else
+                        } else {
                             whosthere.disconnect();
+                        }
                     }
                 }
             }
@@ -306,7 +308,7 @@ MainView {
                 delegate: ListItem.Subtitled {
                     text: DB.displayName(jid) + (presence ? " (" + presence + ")" : "")
                           //" ( time: " + lastTime + " )"
-                    subText: i18n.tr("Last message: ") + lastMsg
+                    subText: lastMsg ? (i18n.tr("Last message: ") + lastMsg) : ""
                     MouseArea {
                         anchors.fill: parent
                         onClicked: DB.showConversation(jid);
@@ -447,8 +449,19 @@ MainView {
             pagestack.push(page_login);
         }
         onConnectionStatusChanged: {
-            Util.log("onConnectionStatusChanged " + status);
+            Util.log("onConnectionStatusChanged status: " + status + " reason: " + reason);
             page_contacts.state = status;
+            if(status == "connected" && pagestack.currentPage == page_login)
+                pagestack.push(page_contacts);
+
+            if(status == "disconnected") {
+                if(reason == "authentication failed") {
+                    alert("Authentication failed, check credentials");
+                    pagestack.push(page_login);
+                } else {
+                    pagestack.push(page_contacts);
+                }
+            }
         }
 
         onAccountEnabledChanged: {
