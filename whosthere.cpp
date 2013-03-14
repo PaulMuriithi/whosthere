@@ -67,8 +67,6 @@ WhosThere::WhosThere(QQuickItem *parent) :
     qDebug() << "Waiting for account manager";
     connect(mAM->becomeReady(), &PendingOperation::finished,
             this, &WhosThere::onAMReady);
-    connect(mAM.data(), &AccountManager::newAccount,
-            this, &WhosThere::onNewAccount);
 }
 
 
@@ -81,10 +79,12 @@ void WhosThere::onAMReady(Tp::PendingOperation *op)
         return;
     }
 
+    connect(mAM.data(), &AccountManager::newAccount,
+            this, &WhosThere::onNewAccount);
+
     QList<AccountPtr> accounts = mAM->accountsByProtocol("whatsapp")->accounts();
     qDebug() << "number of accounts: " << accounts.size();
     if(accounts.size() == 0) {
-        qDebug() << "Creating new account";
         emit noAccount();
     } else {
 
@@ -124,9 +124,9 @@ void WhosThere::set_account(const QString& phonenumber, const QString& password)
         }
         QVariantMap properties;
         properties.insert( "org.freedesktop.Telepathy.Account.Enabled", true );
-        PendingAccount* acc = mAM->createAccount("whosthere", "whatsapp", "WhatApp Account", parameters, properties);
 
-        connect(acc, &PendingAccount::finished,
+        connect(mAM->createAccount("whosthere", "whatsapp", "WhatApp Account", parameters, properties),
+                &PendingAccount::finished,
                 this, &WhosThere::onAccountCreateFinished );
     } else {
         PendingStringList* sl = mAccount->updateParameters(parameters, QStringList());
