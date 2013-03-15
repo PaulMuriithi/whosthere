@@ -1,4 +1,4 @@
-whosthere (1.0.12) UNRELEASED; urgency=low
+whosthere (1.0.12) quantal; urgency=low
 
   * Add sync and name lookup from system addressbook
 
