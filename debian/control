@@ -10,6 +10,6 @@ Homepage: https://github.com/mgehre/whosthere
 
 Package: whosthere
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, telepathy-whosthere (>= 0.5), libqt5sql5-sqlite, qtdeclarative5-localstorage-plugin, qt-components-ubuntu
-Description:  A WhatsApp client
+Depends: ${shlibs:Depends}, ${misc:Depends}, telepathy-whosthere (>= 0.6), libqt5sql5-sqlite, qtdeclarative5-localstorage-plugin, qt-components-ubuntu
+Description: WhatsApp client
  WhosThere is a client for the WhatsApp protocol
