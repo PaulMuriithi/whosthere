@@ -544,7 +544,7 @@ MainView {
             }
         }
         onAlert: {
-            alert(message)
+            root.alert(message)
         }
 
     }
