@@ -240,7 +240,7 @@ void WhosThere::onOnlinenessChanged(bool online) {
     qDebug() << "WhosThere::onOnlinenessChanged " << online;
     if(!mAccount->connection().isNull())
         onConnectionStatusChanged(mAccount->connection()->status());
-    else
+    else if(online)
         qWarning() << "Got WhosThere::onOnlinenessChanged, but no connection";
 }
 
@@ -387,6 +387,9 @@ void WhosThere::syncAddressbook() {
 }
 
 QString WhosThere::getNameForUID(const QString& uid) {
+    if(uid.length() == 0)
+            return QString();
+
     if(!uid.endsWith("@s.whatsapp.net")) {
         qDebug() << "WhosThere::getNameForUID: invalid uid " << uid;
         return QString();
