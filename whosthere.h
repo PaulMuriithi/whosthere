@@ -24,6 +24,7 @@
 #include <TelepathyQt/Account>
 #include <TelepathyQt/PendingAccount>
 #include <TelepathyQt/SimpleTextObserver>
+#include <QContactManager>
 
 using namespace Tp;
 
@@ -56,6 +57,7 @@ private:
     AccountManagerPtr mAM;
     AccountPtr mAccount;
     SimpleTextObserverPtr m_simpleTextObserver;
+    QtContacts::QContactManager contactManager;
 
     /* Telepathy */
     void onContactManagerStateChanged(ContactListState state);
@@ -78,6 +80,8 @@ private:
                                       const Tp::Contacts &  	contactsRemoved,
                                       const Tp::Channel::GroupMemberChangeDetails &  	details);
     void onNewContacts(const Tp::Contacts& contacts);
+
+    void sanitizePhonenumber(QString &phoneNumber);
 public slots:
     void connectAccount();
 
@@ -91,6 +95,7 @@ public slots:
     void code_register(const QString& cc, const QString& phonenumber, const QString& uid, const QString& code);
     void message_send(QString jid, QString message);
     void quit();
+    void syncAddressbook();
 
     QString getCountryCode(const QString& phonenumber);
 signals:

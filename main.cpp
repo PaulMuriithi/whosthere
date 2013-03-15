@@ -28,11 +28,33 @@
 #include "imageprovider.h"
 
 QQuickView* viewer;
+// Temporarily disable the telepathy folks backend
+// as it doesn’t play well with QtFolks.
+static void disableTelepathyFolksBackend(QGuiApplication* application)
+{
+    QTemporaryFile* temp = new QTemporaryFile(application);
+    if (temp->open()) {
+        QTextStream out(temp);
+        out << "[telepathy]\n";
+        out << "enabled=false\n";
+        temp->close();
+        if (setenv("FOLKS_BACKEND_STORE_KEY_FILE_PATH",
+                   temp->fileName().toUtf8().constData(), 1) != 0) {
+            qWarning() << "Failed to disable Telepathy Folks backend:"
+                       << strerror(errno);
+        }
+    } else {
+        qWarning() << "Failed to disable Telepathy Folks backend:"
+                   << temp->errorString();
+    }
+    qDebug() << "disabled telepathy folks";
+}
 
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
+    disableTelepathyFolksBackend(&app);
     Tp::registerTypes();
     //Tp::enableDebug(true);
     Tp::enableWarnings(true);

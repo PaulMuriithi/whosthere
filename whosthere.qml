@@ -296,7 +296,7 @@ MainView {
             Label {
                 anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; margins: units.gu(4) }
                 visible: contactsModel.count == 0
-                text: i18n.tr("You don't have any contacts yet. Receive a message from a friend!")
+                text: i18n.tr("You don't have any contacts yet. Use 'Sync contacts' from the menu or receive a message from a friend!")
                 wrapMode: Text.WordWrap
             }
             ListModel {
@@ -316,6 +316,12 @@ MainView {
                 }
             }
             tools: ToolbarActions {
+                Action {
+                    text: "Sync\ncontacts"
+                    onTriggered: {
+                        whosthere.syncAddressbook();
+                    }
+                }
                 Action {
                     text: "Settings"
                     onTriggered: {

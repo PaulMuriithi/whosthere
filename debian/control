@@ -2,7 +2,7 @@ Source: whosthere
 Section: net
 Priority: extra
 Maintainer: Matthias Gehre <M.Gehre@gmx.de>
-Build-Depends: debhelper (>= 8.0.0), qt5-qmake, qtbase5-dev, qtchooser, qtdeclarative5-dev, libtelepathy-qt5-dev
+Build-Depends: debhelper (>= 8.0.0), qt5-qmake, qtbase5-dev, qtchooser, qtdeclarative5-dev, libtelepathy-qt5-dev, qtpim5-dev
 Standards-Version: 3.9.3
 Homepage: https://github.com/mgehre/whosthere
 #Vcs-Git: git://git.debian.org/collab-maint/whosthere.git

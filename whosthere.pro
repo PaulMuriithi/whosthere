@@ -1,4 +1,4 @@
-QT += qml dbus quick
+QT += qml dbus quick contacts
 INCLUDEPATH += /usr/include/telepathy-qt5
 LIBS += -ltelepathy-qt5
 

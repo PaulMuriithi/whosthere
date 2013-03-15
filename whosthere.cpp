@@ -35,13 +35,17 @@
 #include <TelepathyQt/PendingChannel>
 #include <TelepathyQt/PendingStringList>
 #include <TelepathyQt/PendingSendMessage>
+#include <TelepathyQt/PendingContacts>
 #include <TelepathyQt/ContactMessenger>
 #include <TelepathyQt/TextChannel>
+
+#include <QContactPhoneNumber>
+#include <QContactDisplayLabel>
 
 #include "whosthere.h"
 
 using namespace std;
-
+using namespace QtContacts;
 
 WhosThere::~WhosThere() {
 
@@ -335,6 +339,55 @@ void WhosThere::onNewContacts(const Tp::Contacts& contacts) {
                 });
         emit presenceChanged(jid, contact->presence().status());
     }
+}
+
+/* Addresbook syncing */
+void WhosThere::syncAddressbook() {
+    qDebug() << "WhosThere::syncAddressbook";
+    QRegExp validNumberRegExp("\\+?\\d+");
+
+    if(mAccount.isNull()
+            || mAccount->connection().isNull()
+            || mAccount->connection()->contactManager().isNull()) {
+        alert("Not connected. Please connect for sync");
+        return;
+    }
+
+    //List all available managers for debugging purpose
+    QStringList managers = QtContacts::QContactManager::availableManagers();
+    for( auto avmanager : managers)
+        qDebug() << "Available managers: " << avmanager;
+
+    qDebug() << "Current manager: " << contactManager.managerName();
+    QList<QtContacts::QContact> contacts = contactManager.contacts();
+    QStringList phoneNumbers;
+    for(const QtContacts::QContact& contact : contacts)
+    {
+        //qDebug() << "contact: " << contact;
+        QList<QtContacts::QContactPhoneNumber> contactPhoneNumbers = contact.details<QtContacts::QContactPhoneNumber>();
+        for(const QtContacts::QContactPhoneNumber& detail : contactPhoneNumbers) {
+            QString phoneNumber =  detail.number();
+
+            sanitizePhonenumber(phoneNumber);
+
+            if( !validNumberRegExp.exactMatch(phoneNumber)) {
+                qDebug() << "Ignoring number " << phoneNumber;
+                continue;
+            }
+            qDebug() << "Syncing number " << phoneNumber;
+            phoneNumbers.append(phoneNumber);
+        }
+    }
+    connect(mAccount->connection()->contactManager()->contactsForVCardAddresses("tel",phoneNumbers),
+            &PendingOperation::finished,
+            this, &WhosThere::onPendingOperation);
+}
+
+void WhosThere::sanitizePhonenumber(QString& phoneNumber) {
+    phoneNumber.remove('-');
+    phoneNumber.remove('(');
+    phoneNumber.remove(')');
+    phoneNumber.remove(' ');
 }
 
 /* --------------------------------- SimpleTextObserver ---------------------------------*/
