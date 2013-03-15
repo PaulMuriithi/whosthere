@@ -71,6 +71,9 @@ WhosThere::WhosThere(QQuickItem *parent) :
     qDebug() << "Waiting for account manager";
     connect(mAM->becomeReady(), &PendingOperation::finished,
             this, &WhosThere::onAMReady);
+
+    connect(&contactManager,&QtContacts::QContactManager::contactsAdded,
+            this, &WhosThere::onQContactManagerContactsAdded);
 }
 
 
@@ -383,11 +386,57 @@ void WhosThere::syncAddressbook() {
             this, &WhosThere::onPendingOperation);
 }
 
+QString WhosThere::getNameForUID(const QString& uid) {
+    if(!uid.endsWith("@s.whatsapp.net")) {
+        qDebug() << "WhosThere::getNameForUID: invalid uid " << uid;
+        return QString();
+    }
+    QString needle = uid.left(uid.length()- QLatin1String("@s.whatsapp.net").size());
+
+    QList<QtContacts::QContact> contacts = contactManager.contacts();
+    QString bestMatch;
+    for(const QtContacts::QContact& contact : contacts)
+    {
+        QList<QtContacts::QContactPhoneNumber> contactPhoneNumbers = contact.details<QtContacts::QContactPhoneNumber>();
+        for(const QtContacts::QContactPhoneNumber& detail : contactPhoneNumbers) {
+            QString phoneNumber =  detail.number();
+
+            sanitizePhonenumber(phoneNumber);
+
+            //TODO: Don't do endsWith. Use the users country code to find matches if numbers
+            //in telephonebook do not have a country code
+            phoneNumber.remove('+');
+            if(phoneNumber.startsWith("00")) //remove starting "00"
+                phoneNumber = phoneNumber.mid(2);
+            if(phoneNumber.startsWith("0")) //remove starting "0"
+                phoneNumber = phoneNumber.mid(1);
+
+            if(needle.endsWith(phoneNumber)) {
+                QList<QtContacts::QContactDisplayLabel> labels = contact.details<QtContacts::QContactDisplayLabel>();
+                if(labels.size() == 0)
+                    continue;
+                QString goodMatch = labels.front().label();
+
+                if(bestMatch.length() > 0 && bestMatch != goodMatch) {
+                    qDebug() << "WhosThere::getNameForUID: multiple matches " << bestMatch << " and " << goodMatch;
+                }
+                bestMatch = goodMatch;
+            }
+        }
+    }
+    return bestMatch;
+}
+
 void WhosThere::sanitizePhonenumber(QString& phoneNumber) {
     phoneNumber.remove('-');
     phoneNumber.remove('(');
     phoneNumber.remove(')');
     phoneNumber.remove(' ');
+}
+
+void WhosThere::onQContactManagerContactsAdded (const QList<QContactId> &contactIds ) {
+    qDebug() << "WhosThere::onQContactManagerContactsAdded " << contactIds.size();
+    emit addressbookReady();
 }
 
 /* --------------------------------- SimpleTextObserver ---------------------------------*/

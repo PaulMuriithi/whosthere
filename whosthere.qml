@@ -306,7 +306,7 @@ MainView {
                 anchors { left: parent.left; right: parent.right; top: online_status_btn.bottom; bottom: parent.bottom; margins: units.gu(2) }
                 model: contactsModel
                 delegate: ListItem.Subtitled {
-                    text: DB.displayName(jid) + (presence ? " (" + presence + ")" : "")
+                    text: displayName + (presence ? " (" + presence + ")" : "")
                           //" ( time: " + lastTime + " )"
                     subText: lastMsg ? (i18n.tr("Last message: ") + lastMsg) : ""
                     MouseArea {
@@ -545,6 +545,14 @@ MainView {
         }
         onAlert: {
             root.alert(message)
+        }
+        /* Emitted when the QContactManager finished loading/got a new contact */
+        onAddressbookReady: {
+            Util.log("onAddressbookReady");
+            for(var i = 0; i < contactsModel.count; ++i ) {
+                var entry = contactsModel.get(i);
+                entry["displayName"] = DB.displayName(entry["jid"]);
+            }
         }
 
     }

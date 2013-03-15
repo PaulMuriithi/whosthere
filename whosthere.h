@@ -80,6 +80,7 @@ private:
                                       const Tp::Contacts &  	contactsRemoved,
                                       const Tp::Channel::GroupMemberChangeDetails &  	details);
     void onNewContacts(const Tp::Contacts& contacts);
+    void onQContactManagerContactsAdded ( const QList<QtContacts::QContactId> & contactIds );
 
     void sanitizePhonenumber(QString &phoneNumber);
 public slots:
@@ -96,6 +97,7 @@ public slots:
     void message_send(QString jid, QString message);
     void quit();
     void syncAddressbook();
+    QString getNameForUID(const QString& uid);
 
     QString getCountryCode(const QString& phonenumber);
 signals:
@@ -119,6 +121,8 @@ signals:
     void newContact(QString jid);
     void presenceChanged(QString jid, QString presence);
     void alert(QString message);
+
+    void addressbookReady();
  /*
     void auth_fail(const QString &username, const QString &reason);
     void auth_success(const QString &username);

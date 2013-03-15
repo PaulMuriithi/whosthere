@@ -29,7 +29,11 @@ function showConversation(jid) {
 }
 
 function displayName(jid) {
-    return "+" + jid.replace(/@s\.whatsapp\.net/, "");
+    var displayname = whosthere.getNameForUID(jid);
+    if(displayname)
+        return displayname;
+    else
+        return "+" + jid.replace(/@s\.whatsapp\.net/, "");
 }
 
 function updateContacts() {
@@ -67,6 +71,8 @@ function updateContacts() {
         } else {
             contacts[jid]["presence"] = "";
         }
+
+        contacts[jid]["displayName"] = displayName(jid);
 
         contactsModel.append(contacts[jid]);
     }
