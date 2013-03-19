@@ -3,6 +3,6 @@
         <file>whosthere.qml</file>
         <file>db.js</file>
         <file>util.js</file>
-        <file>countries.csv</file>
+        <file>data/countries.csv</file>
     </qresource>
 </RCC>

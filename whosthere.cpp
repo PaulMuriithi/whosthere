@@ -555,9 +555,9 @@ void WhosThere::message_send(QString jid, QString message)
 /* --------------------------------- Utils ----------------------------------- */
 /* Input: A international number without + or 00 */
 QString WhosThere::getCountryCode(const QString& phonenumber) {
-    QFile file(":countries.csv");
+    QFile file(":data/countries.csv");
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Could not open :countries.csv";
+        qWarning() << "Could not open :data/countries.csv";
         return QString();
     }
 

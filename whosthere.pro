@@ -25,7 +25,7 @@ target.path = $${PREFIX}/bin
 INSTALLS += target
 
 desktop.path = $${PREFIX}/share/applications/
-desktop.files = whosthere.desktop
+desktop.files = data/whosthere.desktop
 INSTALLS += desktop
 
 HEADERS += \
