@@ -329,6 +329,12 @@ MainView {
                     }
                 }
                 Action {
+                    text: "About"
+                    onTriggered: {
+                        alert('WhosThere\n\nWritten by Matthias Gehre\n\nLogo by Seifar\n\n\nhttp://launchpad.net/whosthere');
+                    }
+                }
+                Action {
                     text: i18n.tr("Quit")
                     onTriggered: whosthere.quit();
                 }
